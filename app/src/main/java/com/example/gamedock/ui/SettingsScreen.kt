@@ -58,7 +58,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     }
 }
 
-private data class SettingsUiState(
+data class SettingsUiState(
     val notificationsEnabled: Boolean = true
 )
 

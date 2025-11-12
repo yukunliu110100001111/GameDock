@@ -53,7 +53,7 @@ fun WatchlistScreen(viewModel: WatchlistViewModel = viewModel()) {
     }
 }
 
-private data class WatchlistUiState(
+data class WatchlistUiState(
     val trackedCount: Int = 0,
     val isEmpty: Boolean = true
 )

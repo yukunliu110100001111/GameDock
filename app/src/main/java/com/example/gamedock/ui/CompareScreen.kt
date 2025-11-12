@@ -44,6 +44,7 @@ fun CompareScreen(
     viewModel: CompareViewModel = viewModel(factory = CompareViewModel.factory(repository))
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val errorMessage = uiState.errorMessage
 
     Column(
         modifier = Modifier
@@ -72,15 +73,15 @@ fun CompareScreen(
             )
         }
 
-        if (uiState.errorMessage != null) {
+        errorMessage?.let {
             Text(
-                text = uiState.errorMessage,
+                text = it,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(top = Dimens.cardSpacing)
             )
         }
 
-        if (!uiState.isLoading && uiState.results.isEmpty() && uiState.query.isNotBlank() && uiState.errorMessage == null) {
+        if (!uiState.isLoading && uiState.results.isEmpty() && uiState.query.isNotBlank() && errorMessage == null) {
             Text(
                 text = "No offers found for \"${uiState.query}\".",
                 style = MaterialTheme.typography.bodyMedium,
@@ -99,7 +100,7 @@ fun CompareScreen(
     }
 }
 
-private data class CompareUiState(
+data class CompareUiState(
     val query: String = "",
     val isLoading: Boolean = false,
     val results: List<Offer> = emptyList(),

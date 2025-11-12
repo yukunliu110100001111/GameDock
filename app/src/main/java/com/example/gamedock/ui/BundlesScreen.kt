@@ -44,7 +44,7 @@ fun BundlesScreen(viewModel: BundlesViewModel = viewModel()) {
     }
 }
 
-private data class BundlesUiState(
+data class BundlesUiState(
     val isLoading: Boolean = true,
     val bundles: List<String> = emptyList()
 )

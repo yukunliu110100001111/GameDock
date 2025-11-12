@@ -91,7 +91,7 @@ fun FreebiesScreen(
     }
 }
 
-private data class FreebiesUiState(
+data class FreebiesUiState(
     val isLoading: Boolean = false,
     val games: List<Game> = emptyList(),
     val errorMessage: String? = null
