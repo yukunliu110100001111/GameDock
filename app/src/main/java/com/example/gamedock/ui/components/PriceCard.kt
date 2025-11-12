@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.gamedock.core.util.CurrencyUtils
-import com.example.gamedock.domain.model.Offer
+import com.example.gamedock.data.util.CurrencyUtils
+import com.example.gamedock.data.model.Offer
 
 @Composable
 fun PriceCard(offer: Offer, onOpenStore: (Offer) -> Unit = {}) {

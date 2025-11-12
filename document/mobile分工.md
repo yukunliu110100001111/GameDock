@@ -1,0 +1,7 @@
+### Team Feature-based Responsibility Split
+
+| 成员 | 主要负责的功能线 | 负责范围（纵向：UI + 逻辑 + 数据） |
+|------|------------------|------------------------------------|
+| 成员 1 | Freebies + 领取游戏（Claim） | **功能**：免费游戏列表 + 领取游戏入口。<br>**UI**：Home 中 Freebies 入口、`ui/freebies/` 列表界面、卡片样式、Freebies 页的 Claim 按钮。<br>**逻辑 / UseCase**：`GetFreebiesUseCase`，以及后续与 Claim 相关的用例。<br>**数据 / 仓库**：`DealsRepository.getFreebies()`、`getClaimUrl()` 等与免费游戏和领取相关的部分（从 Fake 数据到将来接真实 API）。 |
+| 成员 2 | Compare + Price History + Bundles（价格相关） | **功能**：跨商店比价、价格历史曲线、慈善包 / 合集。<br>**UI**：`ui/compare/` 搜索 + 结果列表，`ui/bundles/` Bundles 列表界面，详情页中价格对比 / 曲线区域。<br>**逻辑 / UseCase**：`ComparePricesUseCase`、`GetPriceHistoryUseCase`、`GetBundlesUseCase`；负责价格排序、史低标记、去重策略。<br>**数据 / 仓库**：`DealsRepository.comparePrices()`、`getPriceHistory()`、`getBundles()` 以及对应的 DTO / Mapper 设计与实现。 |
+| 成员 3 | Watchlist + 登录 / 会话 + 后台提醒 | **功能**：愿望单、账号登录与保持在线、后台价格/限免提醒。<br>**UI**：`ui/watchlist/` 愿望单列表界面，`ui/settings/` 中与通知/账号相关的设置项。<br>**逻辑 / UseCase**：`ManageWatchlistUseCase`（增删改查）、后续价格提醒相关用例；负责把 Watchlist 从内存版升级为持久化版。<br>**数据 / 本地 & 后台**：`data/local/` 中 Watchlist / Account / Claim 状态的 Room 表设计与实现；多平台账号的 token / 会话管理；`PriceCheckWorker` 等 WorkManager 任务 + 本地通知 + Deep Link 回到详情/Watchlist。 |

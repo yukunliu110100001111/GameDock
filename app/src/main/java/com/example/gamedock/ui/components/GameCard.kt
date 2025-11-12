@@ -23,8 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import com.example.gamedock.core.util.CurrencyUtils
-import com.example.gamedock.domain.model.Game
+import com.example.gamedock.data.util.CurrencyUtils
+import com.example.gamedock.data.model.Game
 
 @Composable
 fun GameCard(game: Game, onClick: () -> Unit) {
