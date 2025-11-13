@@ -1,5 +1,6 @@
 package com.example.gamedock.data.repository
 
+import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Game
 import com.example.gamedock.data.model.Offer
 import kotlinx.coroutines.delay
@@ -10,28 +11,29 @@ import kotlinx.coroutines.delay
 class FakeDealsRepository : DealsRepository {
 
     private val mockFreebies = listOf(
-        Game(
+        Freebie(
             id = "freebie-1",
             title = "Alan Wake Remastered",
             store = "Epic Games Store",
-            imageUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/108710/header.jpg",
-            isFree = true
+            claimUrl = "https://store.epicgames.com/p/alan-wake-remastered",
+            isClaimed = false
         ),
-        Game(
+        Freebie(
             id = "freebie-2",
             title = "Call of Juarez: Gunslinger",
             store = "Steam",
-            imageUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/204450/header.jpg",
-            isFree = true
+            claimUrl = "https://store.steampowered.com/app/204450",
+            isClaimed = false
         ),
-        Game(
+        Freebie(
             id = "freebie-3",
             title = "Ghostrunner Demo",
             store = "GOG",
-            imageUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/1139900/header.jpg",
-            isFree = true
+            claimUrl = "https://www.gog.com/game/ghostrunner_demo",
+            isClaimed = false
         )
     )
+
 
     private val mockOffers = listOf(
         Offer(
@@ -64,7 +66,7 @@ class FakeDealsRepository : DealsRepository {
         )
     )
 
-    override suspend fun getFreebies(): List<Game> {
+    override suspend fun getFreebies(): List<Freebie> {
         delay(250) // Simulate network latency
         return mockFreebies
     }

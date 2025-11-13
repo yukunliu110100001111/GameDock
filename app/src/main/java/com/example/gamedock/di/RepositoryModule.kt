@@ -1,11 +1,14 @@
 package com.example.gamedock.di
 
 import com.example.gamedock.data.repository.DealsRepository
-import com.example.gamedock.data.repository.FakeDealsRepository
+import com.example.gamedock.data.repository.DealsRepositoryImpl
+import com.example.gamedock.data.remote.epic.EpicApiClient
+import com.example.gamedock.data.remote.epic.EpicStoreAdapter
 
-/**
- * Provides repository instances for the composables/ViewModels.
- */
 object RepositoryModule {
-    fun provideDealsRepository(): DealsRepository = FakeDealsRepository()
+    fun provideDealsRepository(): DealsRepository {
+        val api = EpicApiClient.api
+        val adapter = EpicStoreAdapter(api)
+        return DealsRepositoryImpl(adapter)
+    }
 }
