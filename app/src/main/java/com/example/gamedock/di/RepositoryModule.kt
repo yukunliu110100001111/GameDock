@@ -2,13 +2,25 @@ package com.example.gamedock.di
 
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.data.repository.DealsRepositoryImpl
-import com.example.gamedock.data.remote.epic.EpicApiClient
-import com.example.gamedock.data.remote.epic.EpicStoreAdapter
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
-object RepositoryModule {
-    fun provideDealsRepository(): DealsRepository {
-        val api = EpicApiClient.api
-        val adapter = EpicStoreAdapter(api)
-        return DealsRepositoryImpl(adapter)
-    }
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindDealsRepository(
+        dealsRepositoryImpl: DealsRepositoryImpl
+    ): DealsRepository
+
+//    fun bindDealsRepository(): DealsRepository {
+//        val api = EpicApiClient.api
+//        val adapter = EpicStoreAdapter(api)
+//        return DealsRepositoryImpl(adapter)
+//    }
 }

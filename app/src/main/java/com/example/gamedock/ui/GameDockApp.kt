@@ -10,15 +10,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.example.gamedock.di.RepositoryModule
+import com.example.gamedock.data.repository.DealsRepository
 
 @Composable
-fun GameDockApp() {
+fun GameDockApp(repository: DealsRepository) {
     val navController = rememberNavController()
-    val dealsRepository = remember { RepositoryModule.provideDealsRepository() }
 
     Scaffold(
         bottomBar = { BottomNavBar(navController = navController) }
@@ -43,8 +41,9 @@ fun GameDockApp() {
 
             NavGraph(
                 navController = navController,
-                repository = dealsRepository
+                repository = repository
             )
+
         }
     }
 }

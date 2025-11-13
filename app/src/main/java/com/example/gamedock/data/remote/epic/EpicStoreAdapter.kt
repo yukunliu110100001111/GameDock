@@ -1,8 +1,11 @@
 package com.example.gamedock.data.remote.epic
 
 import com.example.gamedock.data.model.Freebie
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class EpicStoreAdapter(
+@Singleton
+class EpicStoreAdapter @Inject constructor(
     private val api: EpicApiService
 ) {
     suspend fun fetchFreebies(): List<Freebie> {
