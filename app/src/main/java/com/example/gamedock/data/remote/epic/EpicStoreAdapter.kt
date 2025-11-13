@@ -25,7 +25,11 @@ class EpicStoreAdapter(
 
             if (freeGames == null) continue
 
-            val slug = item.productSlug ?:continue
+            val slug = item.productSlug
+                ?: item.catalogNs?.mappings?.firstOrNull()?.pageSlug
+                ?: item.urlSlug
+                ?: continue
+
             val claimUrl = "https://store.epicgames.com/p/$slug"
 
             val imageUrl = item.keyImages

@@ -21,7 +21,18 @@ data class EpicGameElement(
     val title: String?,
     val productSlug: String?,
     val keyImages: List<EpicKeyImage>?,
+    val urlSlug: String?,
+    val catalogNs: EpicCatalogNs?,
     val promotions: EpicPromotions?
+)
+
+data class EpicCatalogNs(
+    val mappings: List<EpicMapping>?
+)
+
+data class EpicMapping(
+    val pageSlug: String?,
+    val pageType: String?
 )
 
 data class EpicKeyImage(
