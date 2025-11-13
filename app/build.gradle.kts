@@ -52,6 +52,10 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.runtime)
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.androidx.material3)
     debugImplementation("androidx.compose.ui:ui-tooling:1.6.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0")
 }
