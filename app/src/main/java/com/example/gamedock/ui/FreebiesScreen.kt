@@ -20,10 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Game
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.ui.components.GameCard
@@ -64,8 +66,8 @@ fun FreebiesScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = Dimens.screenPadding)
             ) {
-                items(uiState.games) { game ->
-                    GameCard(game = game, onClick = { /* TODO: details */ })
+                items(uiState.freebies) { freebie ->
+                    FreebieCard(freebie = freebie)
                 }
             }
 
@@ -79,7 +81,7 @@ fun FreebiesScreen(
             )
         }
 
-        if (!uiState.isLoading && uiState.games.isEmpty() && uiState.errorMessage == null) {
+        if (!uiState.isLoading && uiState.freebies.isEmpty() && uiState.errorMessage == null) {
             Text(
                 text = "No freebies found. Pull to refresh to try again.",
                 modifier = Modifier.padding(top = Dimens.cardSpacing)
@@ -91,9 +93,23 @@ fun FreebiesScreen(
     }
 }
 
+@Composable
+fun FreebieCard(
+    freebie: Freebie,
+    onClick: () -> Unit = {}
+) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = freebie.title)
+        Text(text = freebie.store)
+        Text(text = "Ends: ${freebie.endDate ?: "Unknown"}")
+        Text(text = freebie.claimUrl ?: "")
+    }
+}
+
+
 data class FreebiesUiState(
     val isLoading: Boolean = false,
-    val games: List<Game> = emptyList(),
+    val freebies: List<Freebie> = emptyList(),
     val errorMessage: String? = null
 )
 
@@ -112,8 +128,8 @@ class FreebiesViewModel(
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             runCatching { repository.getFreebies() }
-                .onSuccess { games ->
-                    _uiState.value = FreebiesUiState(games = games)
+                .onSuccess { freebies ->
+                    _uiState.value = FreebiesUiState(freebies = freebies)
                 }
                 .onFailure { throwable ->
                     _uiState.value = FreebiesUiState(
