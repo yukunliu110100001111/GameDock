@@ -20,7 +20,13 @@ data class EpicGameElement(
     val id: String?,
     val title: String?,
     val productSlug: String?,
+    val keyImages: List<EpicKeyImage>?,
     val promotions: EpicPromotions?
+)
+
+data class EpicKeyImage(
+    val type: String?,
+    val url: String?
 )
 
 data class EpicPromotions(

@@ -4,6 +4,7 @@ data class Freebie(
     val id: String,
     val title: String,
     val store: String,
+    val imageUrl: String? = null,
     val claimUrl: String?,
     val startDate: String? = null,
     val endDate: String? = null,

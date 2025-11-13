@@ -28,12 +28,17 @@ class EpicStoreAdapter(
             val slug = item.productSlug ?:continue
             val claimUrl = "https://store.epicgames.com/p/$slug"
 
+            val imageUrl = item.keyImages
+                ?.firstOrNull { it.type == "DieselStoreFrontWide" }
+                ?.url
+                ?: item.keyImages?.firstOrNull()?.url
 
             freebies.add(
                 Freebie(
                     id = item.id ?: "",
                     title = item.title ?: "Unknown",
                     store = "Epic Games",
+                    imageUrl = imageUrl,
                     claimUrl = claimUrl,
                     endDate = freeGames.endDate
                 )

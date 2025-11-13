@@ -34,6 +34,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
 
 @Composable
 fun FreebiesScreen(
@@ -98,13 +113,104 @@ fun FreebieCard(
     freebie: Freebie,
     onClick: () -> Unit = {}
 ) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = freebie.title)
-        Text(text = freebie.store)
-        Text(text = "Ends: ${freebie.endDate ?: "Unknown"}")
-        Text(text = freebie.claimUrl ?: "")
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+
+            // 左侧封面图（如果之后你加 imageUrl，这里自动显示）
+            if (freebie.imageUrl != null) {
+                AsyncImage(
+                    model = freebie.imageUrl,
+                    contentDescription = freebie.title,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // 占位图
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No Image",
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                // 标题
+                Text(
+                    text = freebie.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 商店名
+                Text(
+                    text = freebie.store,
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 剩余时间
+                Text(
+                    text = simpleRemaining(freebie.endDate),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row {
+                    Spacer(Modifier.weight(1f))
+
+                    Button(
+                        onClick = {
+                            freebie.claimUrl?.let { url ->
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse(url)
+                                )
+                                context.startActivity(intent)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text("Claim")
+                    }
+                }
+            }
+        }
     }
 }
+
 
 
 data class FreebiesUiState(
@@ -152,3 +258,36 @@ class FreebiesViewModel(
             }
     }
 }
+
+fun simpleRemaining(endDate: String?): String {
+    if (endDate.isNullOrBlank()) return "Ends: Unknown"
+
+    try {
+        val year = endDate.substring(0, 4).toInt()
+        val month = endDate.substring(5, 7).toInt()
+        val day = endDate.substring(8, 10).toInt()
+        val hour = endDate.substring(11, 13).toInt()
+        val minute = endDate.substring(14, 16).toInt()
+        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+        val nowMillis = cal.timeInMillis
+
+        cal.set(year, month - 1, day, hour, minute, 0)
+        val endMillis = cal.timeInMillis
+
+        val diff = endMillis - nowMillis
+        if (diff <= 0) return "Ended"
+
+        val days = diff / (1000 * 60 * 60 * 24)
+        val hours = (diff / (1000 * 60 * 60)) % 24
+
+        return when {
+            days > 0 -> "Ends in ${days}d ${hours}h"
+            hours > 0 -> "Ends in ${hours}h"
+            else -> "Ending soon"
+        }
+
+    } catch (e: Exception) {
+        return "Ends: Unknown"
+    }
+}
+
