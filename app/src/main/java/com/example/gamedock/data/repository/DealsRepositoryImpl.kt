@@ -3,6 +3,7 @@ package com.example.gamedock.data.repository
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Offer
 import com.example.gamedock.data.remote.epic.EpicStoreAdapter
+import com.example.gamedock.data.remote.itad.ItadAdapter
 import com.example.gamedock.data.remote.itad.ItadApiService
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -10,7 +11,7 @@ import javax.inject.Singleton
 @Singleton
 class DealsRepositoryImpl @Inject constructor(
     private val epicStoreAdapter: EpicStoreAdapter,
-    private val itadApi: ItadApiService
+    private val itadAdapter: ItadAdapter
 ) : DealsRepository {
 
     /**
@@ -22,6 +23,6 @@ class DealsRepositoryImpl @Inject constructor(
 
     override suspend fun comparePrices(query: String): List<Offer> {
         // todo
-        return emptyList()
+        return itadAdapter.comparePrices(query)
     }
 }
