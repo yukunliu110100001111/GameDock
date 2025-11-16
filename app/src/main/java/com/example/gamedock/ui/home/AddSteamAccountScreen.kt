@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.gamedock.data.local.SteamAccountStore
-import com.example.gamedock.data.model.SteamAccount
+import com.example.gamedock.data.model.account.SteamAccount
 
 @Composable
 fun AddSteamAccountScreen(navController: NavController) {

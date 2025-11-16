@@ -1,83 +1,52 @@
 package com.example.gamedock.ui.home
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.gamedock.ui.Dimens
 import com.example.gamedock.ui.Screen
+import com.example.gamedock.ui.components.AccountCard
 import com.example.gamedock.ui.components.AddAccountCard
-import com.example.gamedock.ui.components.SteamAccountCard
 
 @Composable
-fun HomeScreen(
-    navController: NavController,
-    viewModel: HomeViewModel = viewModel()
-) {
+fun HomeScreen(navController: NavController) {
+
     val context = LocalContext.current
+    val vm: HomeViewModel = viewModel()
+    val accounts by vm.accounts.collectAsState()
 
-    // 监听添加账号结果
-    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
-    LaunchedEffect(savedStateHandle) {
-        savedStateHandle
-            ?.getLiveData<Boolean>("account_added")
-            ?.observeForever { added ->
-                if (added) {
-                    viewModel.refresh(context)
-                    savedStateHandle.set("account_added", false)
-                }
-            }
+    LaunchedEffect(Unit) {
+        vm.loadAllAccounts(context)
     }
 
-    // 初次进入页面加载账号
-    LaunchedEffect(true) {
-        viewModel.loadAccounts(context)
-    }
+    LazyColumn(Modifier.padding(16.dp)) {
 
-    val accounts by viewModel.accounts.collectAsState()
+        items(accounts) { account ->
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Dimens.screenPadding)
-    ) {
-        Text(
-            text = "Welcome to GameDock!",
-            style = MaterialTheme.typography.headlineSmall
-        )
+            AccountCard(
+                account = account,
 
-        Text(
-            text = "Manage your Steam accounts, compare prices, and more.",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(top = Dimens.cardSpacing)
-        )
+                onClick = { acc ->
+                    navController.navigate("${Screen.AccountDetail.route}/${acc.platform}/${acc.id}")
+                },
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        LazyColumn {
-            items(accounts) { account ->
-                SteamAccountCard(
-                    account = account,
-                    onClick = { id ->
-                        navController.navigate("${Screen.AccountDetail.route}/$id")
-                    },
-                    onDelete = { id ->
-                        viewModel.deleteAccount(context = context, steamId = id)
-                    }
-                )
-            }
-
-            item {
-                AddAccountCard {
-                    navController.navigate(Screen.AddAccount.route)
+                onDelete = { acc ->
+                    vm.deleteAccount(context, acc)
                 }
+            )
+        }
+
+        item {
+            AddAccountCard {
+                navController.navigate(Screen.AddAccount.route)
             }
         }
     }

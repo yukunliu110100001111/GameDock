@@ -3,8 +3,11 @@ package com.example.gamedock.ui.home
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.gamedock.data.local.EpicAccountStore
 import com.example.gamedock.data.local.SteamAccountStore
-import com.example.gamedock.data.model.SteamAccount
+import com.example.gamedock.data.model.account.PlatformAccount
+import com.example.gamedock.data.model.PlatformType
+import com.example.gamedock.data.model.account.SteamAccount
 import com.example.gamedock.data.remote.SteamApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -15,57 +18,28 @@ import kotlinx.coroutines.withContext
 
 class HomeViewModel : ViewModel() {
 
-    private val _accounts = MutableStateFlow<List<SteamAccount>>(emptyList())
-    val accounts: StateFlow<List<SteamAccount>> = _accounts
+    private val _accounts = MutableStateFlow<List<PlatformAccount>>(emptyList())
+    val accounts: StateFlow<List<PlatformAccount>> = _accounts
 
-    /**
-     * 从本地加载所有 Steam 账号（含自动获取昵称 & 头像）
-     */
-    fun loadAccounts(context: Context) {
+    fun loadAllAccounts(context: Context) {
         viewModelScope.launch {
 
-            // 先从本地加载（立即显示）
-            val list = SteamAccountStore.loadAll(context).toMutableList()
-            _accounts.value = list
+            val steam = SteamAccountStore.loadAll(context)
+            val epic = EpicAccountStore.loadAll(context)
 
-            // 后台更新头像 & 昵称（不会阻塞 UI）
-            val updatedList = withContext(Dispatchers.IO) {
-                list.map { acc ->
-                    async {
-                        val result = SteamApi.fetchSteamProfile(acc.id)
-                        if (result != null) {
-                            acc.nickname = result.first
-                            acc.avatar = result.second
-                        }
-                        acc
-                    }
-                }.map { it.await() }
-            }
+            val merged: MutableList<PlatformAccount> = mutableListOf()
+            merged.addAll(steam)
+            merged.addAll(epic)
 
-            // 更新 UI
-            _accounts.value = updatedList
-
-            // 写回本地缓存
-            SteamAccountStore.saveList(context, updatedList)
+            _accounts.value = merged
         }
     }
 
-    /**
-     * 删除账号
-     */
-    fun deleteAccount(context: Context, steamId: String) {
-        viewModelScope.launch {
-            val list = SteamAccountStore
-                .loadAll(context)
-                .filterNot { it.id == steamId }
-
-            SteamAccountStore.saveList(context, list)
-            _accounts.value = list
+    fun deleteAccount(context: Context, account: PlatformAccount) {
+        when (account.platform) {
+            PlatformType.Steam -> SteamAccountStore.delete(context, account.id)
+            PlatformType.Epic -> EpicAccountStore.delete(context, account.id)
         }
+        loadAllAccounts(context)
     }
-
-    /**
-     * 从 AddAccountScreen 返回时刷新
-     */
-    fun refresh(context: Context) = loadAccounts(context)
 }

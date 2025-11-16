@@ -6,7 +6,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.gamedock.data.local.SteamAccountStore
 import com.example.gamedock.data.repository.DealsRepository
+import com.example.gamedock.ui.home.AccountDetailRouterScreen
 import com.example.gamedock.ui.home.AccountScreen
+import com.example.gamedock.ui.home.AddAccountScreen
+import com.example.gamedock.ui.home.AddEpicAccountScreen
 import com.example.gamedock.ui.home.HomeScreen
 import com.example.gamedock.ui.home.AddSteamAccountScreen
 
@@ -38,23 +41,29 @@ fun NavGraph(
             SettingsScreen()
         }
         composable(Screen.AddAccount.route) {
+            AddAccountScreen(navController)
+        }
+        composable(Screen.AddSteam.route) {
             AddSteamAccountScreen(navController)
         }
+        composable(Screen.AddEpic.route) {
+            AddEpicAccountScreen(navController)
+        }
 
-        composable("${Screen.AccountDetail.route}/{steamId}") { backStackEntry ->
 
-            val steamId = backStackEntry.arguments?.getString("steamId")!!
-            val context = navController.context
+        composable(
+            route = "account_detail/{platform}/{id}"
+        ) { backStackEntry ->
 
-            // 找到该账号
-            val account = SteamAccountStore
-                .loadAll(context)
-                .first { it.id == steamId }
+            val platform = backStackEntry.arguments?.getString("platform")!!
+            val id = backStackEntry.arguments?.getString("id")!!
 
-            AccountScreen(
+            AccountDetailRouterScreen(
                 navController = navController,
-                account = account
+                platform = platform,
+                id = id
             )
         }
+
     }
 }

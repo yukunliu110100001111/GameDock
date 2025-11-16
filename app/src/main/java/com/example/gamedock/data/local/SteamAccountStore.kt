@@ -3,7 +3,7 @@ package com.example.gamedock.data.local
 import android.content.Context
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import com.example.gamedock.data.model.SteamAccount
+import com.example.gamedock.data.model.account.SteamAccount
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -70,7 +70,7 @@ object SteamAccountStore {
             .apply()
     }
 
-    fun deleteAccount(context: Context, steamId: String) {
+    fun delete(context: Context, steamId: String) {
         val list = loadAll(context).toMutableList()
         list.removeAll { it.id == steamId }
         saveList(context, list)

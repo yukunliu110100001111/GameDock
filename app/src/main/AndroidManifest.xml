@@ -16,6 +16,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GameDock">
         <activity
+            android:name=".ui.home.EpicLoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.home.EpicProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.MainActivity"
             android:exported="true"
             android:label="@string/app_name"

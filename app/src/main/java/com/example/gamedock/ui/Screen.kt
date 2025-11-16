@@ -1,6 +1,7 @@
 package com.example.gamedock.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Home
@@ -17,6 +18,10 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     data object Bundles : Screen("bundles", "Bundles", Icons.Filled.Inventory2)
     data object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
     data object AddAccount : Screen("add_account", "Add Account", Icons.Filled.Home)
+
+    data object AddSteam : Screen("add_steam", "Add Steam", Icons.Default.Add)
+    data object AddEpic : Screen("add_epic", "Add Epic", Icons.Default.Add)
+
     data object AccountDetail : Screen("account_detail", "Account Detail", Icons.Filled.Home)
     companion object {
         val bottomNavItems = listOf(Home, Freebies, Compare, Watchlist, Bundles, Settings)

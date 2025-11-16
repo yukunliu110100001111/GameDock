@@ -1,43 +1,54 @@
 package com.example.gamedock.ui.components
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
-import com.example.gamedock.data.model.account.SteamAccount
+import com.example.gamedock.data.model.account.PlatformAccount
+import com.example.gamedock.data.model.PlatformType
 
 @Composable
-fun SteamAccountCard(
-    account: SteamAccount,
-    onClick: (String) -> Unit,
-    onDelete: (String) -> Unit
+fun AccountCard(
+    account: PlatformAccount,
+    onClick: (PlatformAccount) -> Unit,
+    onDelete: (PlatformAccount) -> Unit
 ) {
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { onClick(account.id) }
+            .clickable { onClick(account) }
     ) {
+
         Row(
-            modifier = Modifier
+            Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
             Row {
+
                 // ⭐ 头像
                 Image(
                     painter = rememberAsyncImagePainter(account.avatar),
@@ -47,33 +58,30 @@ fun SteamAccountCard(
                         .clip(CircleShape)
                 )
 
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(Modifier.width(16.dp))
 
                 Column {
 
-                    // ⭐ 昵称（新加）
+                    // ⭐ 昵称
                     Text(
-                        text = account.nickname.ifBlank { "Steam User" },
+                        account.nickname,
                         style = MaterialTheme.typography.titleMedium
                     )
 
-                    // ⭐ SteamID（第二行）
+                    // ⭐ 平台标识
                     Text(
-                        text = "ID: ${account.id}",
+                        when (account.platform) {
+                            PlatformType.Steam -> "Steam · ID: ${account.id}"
+                            PlatformType.Epic -> "Epic · ID: ${account.id}"
+                        },
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
 
-            // ⭐ 删除按钮
-            IconButton(
-                onClick = { onDelete(account.id) }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "删除账号",
-                    tint = MaterialTheme.colorScheme.error
-                )
+            // ⭐ 删除
+            IconButton(onClick = { onDelete(account) }) {
+                Icon(Icons.Default.Delete, contentDescription = null)
             }
         }
     }
