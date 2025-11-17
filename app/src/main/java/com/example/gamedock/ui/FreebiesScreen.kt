@@ -26,9 +26,10 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamedock.data.model.Freebie
-import com.example.gamedock.data.model.Game
 import com.example.gamedock.data.repository.DealsRepository
-import com.example.gamedock.ui.components.GameCard
+import com.example.gamedock.data.model.startDateMillis
+import com.example.gamedock.data.model.endDateMillis
+import com.example.gamedock.data.model.remainingText
 import com.example.gamedock.ui.components.SectionHeader
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,13 +49,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+
 
 @Composable
 fun FreebiesScreen(
-    repository: DealsRepository,
-    viewModel: FreebiesViewModel = viewModel(factory = FreebiesViewModel.factory(repository))
+    viewModel: FreebiesViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -81,10 +86,19 @@ fun FreebiesScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = Dimens.screenPadding)
             ) {
-                items(uiState.freebies) { freebie ->
+                item { SectionHeader("🟢 Free now!!") }
+
+                items(uiState.active) { freebie ->
+                    FreebieCard(freebie = freebie)
+                }
+
+                item { SectionHeader("⏳ Upcoming freebies") }
+
+                items(uiState.upcoming) { freebie ->
                     FreebieCard(freebie = freebie)
                 }
             }
+
 
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -96,7 +110,7 @@ fun FreebiesScreen(
             )
         }
 
-        if (!uiState.isLoading && uiState.freebies.isEmpty() && uiState.errorMessage == null) {
+        if (!uiState.isLoading && uiState.active.isEmpty() && uiState.errorMessage == null) {
             Text(
                 text = "No freebies found. Pull to refresh to try again.",
                 modifier = Modifier.padding(top = Dimens.cardSpacing)
@@ -178,12 +192,12 @@ fun FreebieCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 剩余时间
                 Text(
-                    text = simpleRemaining(freebie.endDate),
+                    text = freebie.remainingText,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
+
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -215,11 +229,14 @@ fun FreebieCard(
 
 data class FreebiesUiState(
     val isLoading: Boolean = false,
-    val freebies: List<Freebie> = emptyList(),
+    val active: List<Freebie> = emptyList(),
+    val upcoming: List<Freebie> = emptyList(),
     val errorMessage: String? = null
 )
 
-class FreebiesViewModel(
+
+@HiltViewModel
+class FreebiesViewModel @Inject constructor(
     private val repository: DealsRepository
 ) : ViewModel() {
 
@@ -235,8 +252,25 @@ class FreebiesViewModel(
         viewModelScope.launch {
             runCatching { repository.getFreebies() }
                 .onSuccess { freebies ->
-                    _uiState.value = FreebiesUiState(freebies = freebies)
+                    val now = System.currentTimeMillis()
+
+                    val active = freebies.filter { freebie ->
+                        val start = freebie.startDateMillis ?: 0L
+                        val end = freebie.endDateMillis ?: 0L
+                        now in start..end
+                    }
+
+                    val upcoming = freebies.filter { freebie ->
+                        val start = freebie.startDateMillis ?: Long.MAX_VALUE
+                        now < start
+                    }
+
+                    _uiState.value = FreebiesUiState(
+                        active = active,
+                        upcoming = upcoming
+                    )
                 }
+
                 .onFailure { throwable ->
                     _uiState.value = FreebiesUiState(
                         errorMessage = throwable.message ?: "Unable to load freebies"
@@ -245,49 +279,5 @@ class FreebiesViewModel(
         }
     }
 
-    companion object {
-        fun factory(repository: DealsRepository): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    if (modelClass.isAssignableFrom(FreebiesViewModel::class.java)) {
-                        return FreebiesViewModel(repository) as T
-                    }
-                    throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
-                }
-            }
-    }
-}
-
-fun simpleRemaining(endDate: String?): String {
-    if (endDate.isNullOrBlank()) return "Ends: Unknown"
-
-    try {
-        val year = endDate.substring(0, 4).toInt()
-        val month = endDate.substring(5, 7).toInt()
-        val day = endDate.substring(8, 10).toInt()
-        val hour = endDate.substring(11, 13).toInt()
-        val minute = endDate.substring(14, 16).toInt()
-        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
-        val nowMillis = cal.timeInMillis
-
-        cal.set(year, month - 1, day, hour, minute, 0)
-        val endMillis = cal.timeInMillis
-
-        val diff = endMillis - nowMillis
-        if (diff <= 0) return "Ended"
-
-        val days = diff / (1000 * 60 * 60 * 24)
-        val hours = (diff / (1000 * 60 * 60)) % 24
-
-        return when {
-            days > 0 -> "Ends in ${days}d ${hours}h"
-            hours > 0 -> "Ends in ${hours}h"
-            else -> "Ending soon"
-        }
-
-    } catch (e: Exception) {
-        return "Ends: Unknown"
-    }
 }
 

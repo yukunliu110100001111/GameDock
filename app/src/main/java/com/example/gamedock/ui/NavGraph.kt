@@ -26,7 +26,7 @@ fun NavGraph(
             HomeScreen(navController = navController)
         }
         composable(Screen.Freebies.route) {
-            FreebiesScreen(repository = repository)
+            FreebiesScreen()
         }
         composable(Screen.Compare.route) {
             CompareScreen(repository = repository)

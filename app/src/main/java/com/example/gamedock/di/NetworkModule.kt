@@ -1,6 +1,7 @@
 package com.example.gamedock.di
 
 import com.example.gamedock.data.remote.epic.EpicApiService
+import com.example.gamedock.data.remote.gamerpower.GamerPowerApiService
 import com.example.gamedock.data.remote.itad.ItadApiService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -74,5 +75,30 @@ object NetworkModule {
     fun provideItadApiService(@Named("ItadRetrofit") retrofit: Retrofit): ItadApiService {
         return retrofit.create(ItadApiService::class.java)
     }
+
+    // -----------------------------------------------------------------
+    // GamerPower API
+    // -----------------------------------------------------------------
+
+    private const val GAMERPOWER_BASE_URL = "https://www.gamerpower.com/api/"
+
+    @Provides
+    @Singleton
+    @Named("GamerPowerRetrofit")
+    fun provideGamerPowerRetrofit(gson: Gson): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(GAMERPOWER_BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGamerPowerApiService(
+        @Named("GamerPowerRetrofit") retrofit: Retrofit
+    ): GamerPowerApiService {
+        return retrofit.create(GamerPowerApiService::class.java)
+    }
+
 
 }

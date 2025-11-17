@@ -16,17 +16,23 @@ class EpicStoreAdapter @Inject constructor(
             ?.searchStore
             ?.elements ?: return emptyList()
 
-
         val freebies = mutableListOf<Freebie>()
 
-        for (item in elements){
-            val freeGames = item.promotions
+        for (item in elements) {
+
+            val activeOffer = item.promotions
                 ?.promotionalOffers
                 ?.firstOrNull()
                 ?.promotionalOffers
                 ?.firstOrNull()
 
-            if (freeGames == null) continue
+            val upcomingOffer = item.promotions
+                ?.upcomingPromotionalOffers
+                ?.firstOrNull()
+                ?.promotionalOffers
+                ?.firstOrNull()
+
+            val offer = activeOffer ?: upcomingOffer ?: continue
 
             val slug = item.productSlug
                 ?: item.catalogNs?.mappings?.firstOrNull()?.pageSlug
@@ -47,10 +53,12 @@ class EpicStoreAdapter @Inject constructor(
                     store = "Epic Games",
                     imageUrl = imageUrl,
                     claimUrl = claimUrl,
-                    endDate = freeGames.endDate
+                    startDate = offer.startDate,   // ← ★ 关键
+                    endDate = offer.endDate         // ← 已有
                 )
             )
         }
+
         return freebies
     }
 
