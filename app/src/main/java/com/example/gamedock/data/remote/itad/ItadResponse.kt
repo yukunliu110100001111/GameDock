@@ -75,3 +75,42 @@ data class Drm(
 data class GameUrls(
     val game: String // 游戏在 ITAD 上的链接
 )
+
+// ------------------- Detailed Price Data ------------------
+
+typealias GamePriceDetailsResponse = List<GamePriceDetails>
+
+/**
+ * 单个游戏详情，对应列表中的每个元素。
+ */
+data class GamePriceDetails(
+    val id: String, // 游戏ID
+    val historyLow: HistoryLow, // 历史低价
+    val deals: List<Deal> // 当前所有优惠
+)
+
+/**
+ * 3. 历史低价 (聚合)
+ */
+data class HistoryLow(
+    val all: Price, // 全时段史低
+    val y1: Price, // 1年内史低
+    val m3: Price // 3个月内史低
+)
+
+/**
+ * 4. 单个优惠详情
+ * 对应 "deals" 数组中的每个元素。
+ */
+data class Deal(
+    val shop: Shop,
+    val price: Price, // 当前售价
+    val regular: Price, // 原价
+    val cut: Int, // 折扣
+    val storeLow: Price?, // 本店史低
+    val drm: List<Drm>,
+    val url: String
+)
+
+
+

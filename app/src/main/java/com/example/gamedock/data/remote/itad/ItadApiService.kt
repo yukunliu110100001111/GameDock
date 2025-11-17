@@ -30,7 +30,7 @@ interface ItadApiService {
      * @param gameIds List of game IDs to query.
      */
     @POST("games/overview/v2")
-    suspend fun getGamePrices(
+    suspend fun getGamePriceOverview(
         @Query("key") apiKey: String,
         @Query("country") country: String,
         @Query("shops") shopIds: List<Int>? = null,
@@ -38,4 +38,26 @@ interface ItadApiService {
 
         @Body gameIds: List<String>
     ): GamePriceResponse
+
+    @POST("games/prices/v3")
+    suspend fun getGamePrices(
+        @Query("key") apiKey: String,
+        @Query("country") country: String,
+        @Body gameIds: List<String>,
+
+        /**
+         * Only load deals, omit prices that have no price cut
+         */
+        @Query("deals") onlyDeals: Boolean? = null,
+
+        /**
+         * How many prices to load per each game
+         */
+        @Query("capacity") capacity: Int? = null,
+
+        @Query("shops") shopIds: List<Int>? = null,
+        @Query("vouchers") allowVouchers: Boolean? = null
+
+    ): GamePriceDetailsResponse
+
 }

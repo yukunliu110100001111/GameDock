@@ -1,5 +1,6 @@
 package com.example.gamedock.data.remote.itad
 
+import android.util.Log
 import com.example.gamedock.data.model.Offer
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -11,7 +12,69 @@ class ItadAdapter @Inject constructor(
 
     private val ITAD_API_KEY = "d719761d720142c5f15a7b7b7177704783ffc227"
 
+    private val countryCode = "US" // todo: make dynamic
+
     suspend fun comparePrices(gameQuery: String): List<Offer> {
+        try {
+            // search for the game to get its ID
+            val searchResults = itadApiService.searchGame(
+                apiKey = ITAD_API_KEY,
+                title = gameQuery,
+                resultCount = 1
+            )
+
+            val searchItem = searchResults.firstOrNull()
+
+            val gameId = searchItem?.id
+            val gameTitle = searchItem?.title
+
+            // if no game found, return empty list
+            if (gameId == null || gameTitle == null) {
+                Log.w("ItadAdapter", "No game found for query: $gameQuery")
+                return emptyList()
+            }
+
+            // get price details for the found game ID
+            val gameIdsToQuery = listOf(gameId)
+
+            val priceResponse = itadApiService.getGamePrices(
+                apiKey = ITAD_API_KEY,
+                country = countryCode,
+                gameIds = gameIdsToQuery,
+                onlyDeals = null, // null = 获取所有价格（包括原价）
+                capacity = null   // null = 不限制返回的优惠数量
+            )
+
+            val gameDetails = priceResponse.firstOrNull()
+
+            if (gameDetails == null) {
+                Log.w("ItadAdapter", "No price details found for game ID: $gameId")
+                return emptyList()
+            }
+
+            return gameDetails.deals.map { deal ->
+                // if storeLow is null, use current price as lowest price
+                val storeLowestPrice = deal.storeLow?.amount ?: deal.price.amount
+
+                Offer(
+                    id = gameId,
+                    gameTitle = gameTitle,
+                    store = deal.shop.name,
+                    currentPrice = deal.price.amount,
+                    lowestPrice = storeLowestPrice,
+                    currencyCode = deal.price.currency,
+                    url = deal.url
+                )
+            }
+
+
+        }
+        catch (_: Exception) {
+            return emptyList()
+        }
+    }
+
+    suspend fun getPrice (gameQuery: String): List<Offer> {
         try {
             // search for the game to get its ID
             val searchResults = itadApiService.searchGame(
@@ -29,10 +92,8 @@ class ItadAdapter @Inject constructor(
 
             // get price overview for the found game ID
             val gameIdsToQuery = listOf(gameId)
-            // todo: country code should be dynamic
-            val countryCode = "US"
 
-            val priceResponse = itadApiService.getGamePrices(
+            val priceResponse = itadApiService.getGamePriceOverview(
                 apiKey = ITAD_API_KEY,
                 country = countryCode,
                 gameIds = gameIdsToQuery
@@ -43,6 +104,7 @@ class ItadAdapter @Inject constructor(
                 gameId = gameId,
                 gameTitle = searchResults.first().title
             )
+
 
         } catch (_: Exception) {
             return emptyList()

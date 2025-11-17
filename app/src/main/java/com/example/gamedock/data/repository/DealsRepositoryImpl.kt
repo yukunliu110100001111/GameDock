@@ -22,7 +22,6 @@ class DealsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun comparePrices(query: String): List<Offer> {
-        // todo
         return itadAdapter.comparePrices(query)
     }
 }
