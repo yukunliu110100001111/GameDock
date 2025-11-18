@@ -52,8 +52,8 @@ data class PriceDetails(
 
 data class LowestPrice(
     val shop: Shop,
-    val price: Price, // 史低价格
-    val regular: Price, // 当时的原价
+    val price: Price, // historical low price
+    val regular: Price, // original price when the low was recorded
 )
 
 data class Shop(
@@ -73,7 +73,7 @@ data class Drm(
 )
 
 data class GameUrls(
-    val game: String // 游戏在 ITAD 上的链接
+    val game: String // link to the game page on ITAD
 )
 
 // ------------------- Detailed Price Data ------------------
@@ -81,36 +81,34 @@ data class GameUrls(
 typealias GamePriceDetailsResponse = List<GamePriceDetails>
 
 /**
- * 单个游戏详情，对应列表中的每个元素。
+ * Detailed info for a single game (each entry in the list).
  */
 data class GamePriceDetails(
-    val id: String, // 游戏ID
-    val historyLow: HistoryLow, // 历史低价
-    val deals: List<Deal> // 当前所有优惠
+    val id: String, // game identifier
+    val historyLow: HistoryLow, // aggregated price history
+    val deals: List<Deal> // current deals
 )
 
 /**
- * 3. 历史低价 (聚合)
+ * Aggregated historical lows.
  */
 data class HistoryLow(
-    val all: Price, // 全时段史低
-    val y1: Price, // 1年内史低
-    val m3: Price // 3个月内史低
+    val all: Price, // all-time low
+    val y1: Price, // low within the last year
+    val m3: Price // low within the last three months
 )
 
 /**
- * 4. 单个优惠详情
- * 对应 "deals" 数组中的每个元素。
+ * Single deal details (each entry in the `deals` list).
  */
 data class Deal(
     val shop: Shop,
-    val price: Price, // 当前售价
-    val regular: Price, // 原价
-    val cut: Int, // 折扣
-    val storeLow: Price?, // 本店史低
+    val price: Price, // current price
+    val regular: Price, // original price
+    val cut: Int, // discount percent
+    val storeLow: Price?, // lowest price on this store
     val drm: List<Drm>,
     val url: String
 )
-
 
 

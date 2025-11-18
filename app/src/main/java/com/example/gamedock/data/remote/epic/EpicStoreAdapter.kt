@@ -53,8 +53,8 @@ class EpicStoreAdapter @Inject constructor(
                     store = "Epic Games",
                     imageUrl = imageUrl,
                     claimUrl = claimUrl,
-                    startDate = offer.startDate,   // ← ★ 关键
-                    endDate = offer.endDate         // ← 已有
+                    startDate = offer.startDate,   // important for filtering active freebies
+                    endDate = offer.endDate        // used to determine expiration
                 )
             )
         }

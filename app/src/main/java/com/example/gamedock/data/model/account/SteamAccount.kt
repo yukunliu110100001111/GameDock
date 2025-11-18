@@ -6,6 +6,7 @@ data class SteamAccount(
     override val id: String,
     val steamLoginSecure: String,
     val sessionid: String,
+    val cookies: Map<String, String> = emptyMap(),
     override var nickname: String = "Steam User",
     override var avatar: String = "",
 ) : PlatformAccount() {

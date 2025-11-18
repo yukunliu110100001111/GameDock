@@ -41,8 +41,8 @@ class ItadAdapter @Inject constructor(
                 apiKey = ITAD_API_KEY,
                 country = countryCode,
                 gameIds = gameIdsToQuery,
-                onlyDeals = null, // null = 获取所有价格（包括原价）
-                capacity = null   // null = 不限制返回的优惠数量
+                onlyDeals = null, // null = fetch all prices, including the original price
+                capacity = null   // null = no limit on the number of returned offers
             )
 
             val gameDetails = priceResponse.firstOrNull()

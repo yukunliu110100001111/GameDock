@@ -57,7 +57,7 @@ fun AddEpicAccountScreen(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("添加 Epic 账号", style = MaterialTheme.typography.headlineMedium)
+        Text("Add Epic Account", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(Modifier.height(24.dp))
 
@@ -78,7 +78,7 @@ fun AddEpicAccountScreen(
             enabled = !uiState.isProcessing,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (uiState.isProcessing) "处理中..." else "打开 Epic 登录")
+            Text(if (uiState.isProcessing) "Working..." else "Open Epic Login")
         }
 
         if (uiState.isProcessing) {

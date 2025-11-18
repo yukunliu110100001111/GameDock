@@ -14,7 +14,7 @@ object EpicAuthApi {
     private val client = OkHttpClient()
 
     /**
-     * Step 1 — 用 authorization_code 换 token
+     * Step 1 — Exchange authorization_code for tokens.
      *
      * POST https://account-public-service-prod03.ol.epicgames.com/account/api/oauth/token
      *
@@ -59,7 +59,7 @@ object EpicAuthApi {
         }
 
     /**
-     * Step 2 — 使用 refresh_token 刷新 access_token
+     * Step 2 — Refresh tokens using refresh_token.
      *
      * grant_type=refresh_token
      */
@@ -99,7 +99,7 @@ object EpicAuthApi {
         }
 
     /**
-     * 可选：验证当前 access_token 是否有效
+     * Optional: verify whether the current access_token is valid.
      */
     suspend fun verifyAccessToken(accessToken: String): JSONObject? =
         withContext(Dispatchers.IO) {

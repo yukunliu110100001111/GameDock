@@ -18,7 +18,7 @@ class GamerPowerStoreAdapter @Inject constructor(
 
         for (dto in dtos) {
 
-            // GamerPower 提供的领取 URL
+            // Claim URL provided by GamerPower
             val claimUrl = dto.openGiveawayUrl ?: continue
 
             val storeName = extractStore(dto.platforms)
@@ -42,7 +42,7 @@ class GamerPowerStoreAdapter @Inject constructor(
     }
 
     /**
-     * GamerPower 的 platforms 字段类似：
+     * GamerPower's `platforms` field looks like:
      * "PC, Steam"
      * "PC, DRM-Free"
      * "PC, Epic Games"

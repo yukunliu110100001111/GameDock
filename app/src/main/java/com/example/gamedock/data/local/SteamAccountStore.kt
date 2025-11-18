@@ -25,7 +25,7 @@ object SteamAccountStore {
     fun saveAccount(context: Context, account: SteamAccount) {
         val list = loadAll(context).toMutableList()
 
-        // 如果已有同 steamId 的账号，覆盖
+        // Replace any existing account with the same steamId
         list.removeAll { it.id == account.id }
         list.add(account)
 
@@ -45,7 +45,8 @@ object SteamAccountStore {
                     id = o.getString("id"),
                     steamLoginSecure = o.getString("secure"),
                     sessionid = o.getString("sessionid"),
-                    nickname = o.optString("nickname", "Steam User")
+                    nickname = o.optString("nickname", "Steam User"),
+                    cookies = readCookies(o, o.getString("id"), o.getString("secure"), o.getString("sessionid"))
                 )
             )
         }
@@ -61,6 +62,16 @@ object SteamAccountStore {
                     put("secure", acc.steamLoginSecure)
                     put("sessionid", acc.sessionid)
                     put("nickname", acc.nickname)
+                    put("cookies", JSONObject().apply {
+                        val cookies = if (acc.cookies.isNotEmpty()) acc.cookies
+                        else mapOf(
+                            "steamLoginSecure" to acc.steamLoginSecure,
+                            "sessionid" to acc.sessionid
+                        )
+                        cookies.forEach { (name, value) ->
+                            put(name, value)
+                        }
+                    })
                 }
             )
         }
@@ -74,5 +85,31 @@ object SteamAccountStore {
         val list = loadAll(context).toMutableList()
         list.removeAll { it.id == steamId }
         saveList(context, list)
+    }
+
+    private fun readCookies(
+        jsonObject: JSONObject,
+        accountId: String,
+        steamLoginSecure: String,
+        sessionId: String
+    ): Map<String, String> {
+        val cookiesObj = jsonObject.optJSONObject("cookies") ?: return mapOf(
+            "steamLoginSecure" to steamLoginSecure,
+            "sessionid" to sessionId
+        )
+
+        val result = mutableMapOf<String, String>()
+        cookiesObj.keys().forEach { key ->
+            result[key] = cookiesObj.optString(key)
+        }
+
+        if (!result.containsKey("steamLoginSecure")) {
+            result["steamLoginSecure"] = steamLoginSecure
+        }
+        if (!result.containsKey("sessionid")) {
+            result["sessionid"] = sessionId
+        }
+
+        return result
     }
 }

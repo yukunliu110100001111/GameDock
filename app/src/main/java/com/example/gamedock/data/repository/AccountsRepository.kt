@@ -11,6 +11,7 @@ interface AccountsRepository {
     suspend fun saveEpicAccount(account: EpicAccount)
     suspend fun deleteSteamAccount(id: String)
     suspend fun deleteEpicAccount(id: String)
+    suspend fun findAccount(platform: PlatformType, id: String): PlatformAccount?
 
     suspend fun deleteAccount(account: PlatformAccount) {
         when (account.platform) {

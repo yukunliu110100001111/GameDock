@@ -40,7 +40,7 @@ fun AccountScreen(
                 title = { Text(account.nickname.ifBlank { "Steam Account" }) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 }
             )
@@ -53,7 +53,7 @@ fun AccountScreen(
                 .fillMaxSize()
                 .padding(24.dp)
         ) {
-            // 🔽 这里放你原本的内容（头像、昵称、测试登录按钮等）
+            // Slot for any future content (avatar, nickname, test login button, etc.)
 
 
             Text(
@@ -72,7 +72,7 @@ fun AccountScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "steamLoginSecure (前20位):",
+                text = "steamLoginSecure (first 20 chars):",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(account.steamLoginSecure.take(20) + "...")
@@ -87,7 +87,7 @@ fun AccountScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // ⭐ 打开网站验证按钮
+            // Button to open the profile in an external browser
             Button(
                 onClick = {
                     val url = "https://steamcommunity.com/profiles/${account.id}"
@@ -96,9 +96,8 @@ fun AccountScreen(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("打开网站验证")
+                Text("Open Profile in Browser")
             }
         }
     }
 }
-

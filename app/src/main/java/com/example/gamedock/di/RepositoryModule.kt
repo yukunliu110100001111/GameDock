@@ -1,5 +1,7 @@
 package com.example.gamedock.di
 
+import com.example.gamedock.data.repository.AccountCredentialsProvider
+import com.example.gamedock.data.repository.AccountCredentialsProviderImpl
 import com.example.gamedock.data.repository.AccountsRepository
 import com.example.gamedock.data.repository.AccountsRepositoryImpl
 import com.example.gamedock.data.repository.DealsRepository
@@ -33,4 +35,10 @@ abstract class RepositoryModule {
     abstract fun bindEpicAuthRepository(
         impl: EpicAuthRepositoryImpl
     ): EpicAuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountCredentialsProvider(
+        impl: AccountCredentialsProviderImpl
+    ): AccountCredentialsProvider
 }

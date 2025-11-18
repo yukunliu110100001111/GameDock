@@ -16,7 +16,7 @@ fun AddAccountScreen(navController: NavController) {
     val platforms = listOf(
         PlatformType.Steam,
         PlatformType.Epic,
-        // 未来加入更多平台
+        // Additional platforms can be added here later
     )
 
     Column(
@@ -26,7 +26,7 @@ fun AddAccountScreen(navController: NavController) {
     ) {
 
         Text(
-            text = "添加账号",
+            text = "Add Account",
             style = MaterialTheme.typography.headlineMedium
         )
 

@@ -49,7 +49,7 @@ fun AccountCard(
 
             Row {
 
-                // ⭐ 头像
+                // Avatar
                 Image(
                     painter = rememberAsyncImagePainter(account.avatar),
                     contentDescription = null,
@@ -62,13 +62,13 @@ fun AccountCard(
 
                 Column {
 
-                    // ⭐ 昵称
+                    // Display name
                     Text(
                         account.nickname,
                         style = MaterialTheme.typography.titleMedium
                     )
 
-                    // ⭐ 平台标识
+                    // Platform label
                     Text(
                         when (account.platform) {
                             PlatformType.Steam -> "Steam · ID: ${account.id}"
@@ -79,9 +79,13 @@ fun AccountCard(
                 }
             }
 
-            // ⭐ 删除
+            // Delete action
             IconButton(onClick = { onDelete(account) }) {
-                Icon(Icons.Default.Delete, contentDescription = null)
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete account",
+                    tint = androidx.compose.ui.graphics.Color.Black
+                )
             }
         }
     }

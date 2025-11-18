@@ -41,7 +41,7 @@ fun EpicAccountDetailScreen(
         .find { it.id == epicId }
 
     if (account == null) {
-        Text("找不到 Epic 账号")
+        Text("Epic account not found.")
         return
     }
 
@@ -71,38 +71,38 @@ fun EpicAccountDetailScreen(
             Spacer(Modifier.height(8.dp))
         }
 
-        // 打开 Epic 官方个人页面
+        // Open Epic profile page
         Button(
             onClick = {
                 val intent = Intent(context, EpicProfileActivity::class.java).apply {
-                    putExtra(EpicProfileActivity.EXTRA_ACCESS_TOKEN, account.accessToken)
+                    putExtra(EpicProfileActivity.EXTRA_ACCOUNT_ID, account.id)
                 }
                 context.startActivity(intent)
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("打开 Epic 个人资料页面")
+            Text("Open Epic Profile")
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // 刷新 Token
+        // Refresh token
         Button(
             onClick = {
                 scope.launch {
-                    status = "刷新 Token 中..."
+                    status = "Refreshing token..."
                     val success = vm.refreshEpicAccount(account)
-                    status = if (success) "Token 已刷新！" else "刷新失败，请稍后再试"
+                    status = if (success) "Token refreshed." else "Refresh failed, please try again."
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("刷新 Epic Token")
+            Text("Refresh Epic Token")
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // 删除账号
+        // Delete account
         Button(
             onClick = {
                 vm.deleteAccount(account)
@@ -111,7 +111,7 @@ fun EpicAccountDetailScreen(
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("删除账号")
+            Text("Delete Account")
         }
     }
 }

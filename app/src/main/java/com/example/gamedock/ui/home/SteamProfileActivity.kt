@@ -1,58 +1,23 @@
 package com.example.gamedock.ui.home
 
-import android.annotation.SuppressLint
-import android.os.Bundle
-import android.webkit.WebView
-import android.webkit.WebViewClient
-import androidx.activity.ComponentActivity
+import com.example.gamedock.data.model.PlatformType
 
-/**
- * Simple in-app WebView to display Steam profiles without leaving the app.
- */
-class SteamProfileActivity : ComponentActivity() {
+class SteamProfileActivity : AccountWebViewActivity() {
 
-    private lateinit var webView: WebView
+    override fun resolveConfig(): WebViewConfig? {
+        val accountId = intent.getStringExtra(EXTRA_ACCOUNT_ID) ?: return null
+        val url = intent.getStringExtra(EXTRA_PROFILE_URL)
+            ?: "https://steamcommunity.com/profiles/$accountId"
 
-    @SuppressLint("SetJavaScriptEnabled")
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        val profileUrl = intent.getStringExtra(EXTRA_PROFILE_URL)
-        if (profileUrl.isNullOrBlank()) {
-            finish()
-            return
-        }
-
-        webView = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            webViewClient = object : WebViewClient() {}
-        }
-
-        setContentView(webView)
-
-        if (savedInstanceState != null) {
-            webView.restoreState(savedInstanceState)
-        } else {
-            webView.loadUrl(profileUrl)
-        }
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        if (::webView.isInitialized) {
-            webView.saveState(outState)
-        }
-    }
-
-    override fun onDestroy() {
-        if (::webView.isInitialized) {
-            webView.destroy()
-        }
-        super.onDestroy()
+        return WebViewConfig(
+            platform = PlatformType.Steam,
+            accountId = accountId,
+            targetUrl = url
+        )
     }
 
     companion object {
+        const val EXTRA_ACCOUNT_ID = "extra_account_id"
         const val EXTRA_PROFILE_URL = "extra_profile_url"
     }
 }

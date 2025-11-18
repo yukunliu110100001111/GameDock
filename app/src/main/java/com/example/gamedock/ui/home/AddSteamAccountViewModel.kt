@@ -26,7 +26,7 @@ class AddSteamAccountViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AddSteamAccountUiState())
     val uiState: StateFlow<AddSteamAccountUiState> = _uiState.asStateFlow()
 
-    fun saveAccount(steamLoginSecure: String, sessionId: String) {
+    fun saveAccount(steamLoginSecure: String, sessionId: String, cookies: Map<String, String> = emptyMap()) {
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
             runCatching {
@@ -34,6 +34,10 @@ class AddSteamAccountViewModel @Inject constructor(
                     id = extractSteamId(steamLoginSecure),
                     steamLoginSecure = steamLoginSecure,
                     sessionid = sessionId,
+                    cookies = if (cookies.isNotEmpty()) cookies else mapOf(
+                        "steamLoginSecure" to steamLoginSecure,
+                        "sessionid" to sessionId
+                    ),
                     nickname = "Steam User"
                 )
                 accountsRepository.saveSteamAccount(account)
@@ -43,7 +47,7 @@ class AddSteamAccountViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        errorMessage = throwable.message ?: "保存失败，请重试。"
+                        errorMessage = throwable.message ?: "Failed to save, please try again."
                     )
                 }
             }

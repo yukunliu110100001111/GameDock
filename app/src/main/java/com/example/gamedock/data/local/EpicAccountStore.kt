@@ -25,7 +25,7 @@ object EpicAccountStore {
     )
 
     /**
-     * 读取所有 Epic 账号
+     * Load all stored Epic accounts.
      */
     fun loadAll(context: Context): List<EpicAccount> {
         val json = prefs(context).getString(KEY_JSON, "[]") ?: "[]"
@@ -34,24 +34,24 @@ object EpicAccountStore {
     }
 
     /**
-     * 保存完整账号列表（内部使用）
+     * Persist the full account list (internal use only).
      */
     fun saveList(context: Context, list: List<EpicAccount>) {
         prefs(context).edit().putString(KEY_JSON, gson.toJson(list)).apply()
     }
 
     /**
-     * 保存一个账号（追加到列表）
+     * Save or replace a single account entry.
      */
     fun saveAccount(context: Context, account: EpicAccount) {
         val list = loadAll(context).toMutableList()
-        list.removeAll { it.id == account.id } // 避免重复
+        list.removeAll { it.id == account.id } // avoid duplicates
         list.add(account)
         saveList(context, list)
     }
 
     /**
-     * 删除账号
+     * Delete an account by id.
      */
     fun delete(context: Context, epicId: String) {
         val list = loadAll(context).filterNot { it.id == epicId }

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class AddEpicAccountUiState(
-    val statusMessage: String = "点击下方按钮，在官方页面登录你的 Epic 账号。",
+    val statusMessage: String = "Tap the button below to sign in to Epic on the official page.",
     val isProcessing: Boolean = false,
     val errorMessage: String? = null,
     val isCompleted: Boolean = false
@@ -38,7 +38,7 @@ class AddEpicAccountViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isProcessing = false,
-                        errorMessage = "授权失败，请重试。"
+                        errorMessage = "Authorization failed, please try again."
                     )
                 }
                 return@launch
@@ -46,7 +46,7 @@ class AddEpicAccountViewModel @Inject constructor(
 
             accountsRepository.saveEpicAccount(tokens.toAccount())
             _uiState.value = AddEpicAccountUiState(
-                statusMessage = "账号已保存！",
+                statusMessage = "Account saved!",
                 isCompleted = true
             )
         }
@@ -55,7 +55,7 @@ class AddEpicAccountViewModel @Inject constructor(
     fun onLoginCancelled() {
         _uiState.update {
             it.copy(
-                statusMessage = "已取消 Epic 登录流程。",
+                statusMessage = "Epic login flow cancelled.",
                 errorMessage = null,
                 isProcessing = false
             )
@@ -65,7 +65,7 @@ class AddEpicAccountViewModel @Inject constructor(
     fun onMissingCode() {
         _uiState.update {
             it.copy(
-                statusMessage = "未能获取授权 code，请重试。",
+                statusMessage = "Failed to fetch authorization code, please retry.",
                 errorMessage = null,
                 isProcessing = false
             )

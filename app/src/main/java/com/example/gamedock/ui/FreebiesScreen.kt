@@ -143,7 +143,7 @@ fun FreebieCard(
                 .padding(12.dp)
         ) {
 
-            // 左侧封面图（如果之后你加 imageUrl，这里自动显示）
+            // Left cover image (will show automatically if imageUrl is provided later)
             if (freebie.imageUrl != null) {
                 AsyncImage(
                     model = freebie.imageUrl,
@@ -154,7 +154,7 @@ fun FreebieCard(
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // 占位图
+                // Placeholder image
                 Box(
                     modifier = Modifier
                         .size(80.dp)
@@ -174,7 +174,7 @@ fun FreebieCard(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                // 标题
+                // Title
                 Text(
                     text = freebie.title,
                     style = MaterialTheme.typography.titleMedium,
@@ -184,7 +184,7 @@ fun FreebieCard(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // 商店名
+                // Store name
                 Text(
                     text = freebie.store,
                     style = MaterialTheme.typography.labelMedium
@@ -280,4 +280,3 @@ class FreebiesViewModel @Inject constructor(
     }
 
 }
-

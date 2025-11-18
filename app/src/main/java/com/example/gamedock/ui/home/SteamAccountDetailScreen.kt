@@ -32,14 +32,14 @@ fun SteamAccountDetailScreen(
         }
     }
 
-    // 从 ViewModel 中找到当前账号
+    // Lookup the selected account in the shared ViewModel
     val accounts by vm.accounts.collectAsState()
     val account = accounts
         .filterIsInstance<SteamAccount>()
         .find { it.id == steamId }
 
     if (account == null) {
-        Text("找不到 Steam 账号")
+        Text("Steam account not found.")
         return
     }
 
@@ -63,10 +63,11 @@ fun SteamAccountDetailScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // 打开 Steam 个人资料
+        // Open Steam profile page
         Button(
             onClick = {
                 val intent = Intent(context, SteamProfileActivity::class.java).apply {
+                    putExtra(SteamProfileActivity.EXTRA_ACCOUNT_ID, account.id)
                     putExtra(
                         SteamProfileActivity.EXTRA_PROFILE_URL,
                         "https://steamcommunity.com/profiles/${account.id}"
@@ -76,12 +77,12 @@ fun SteamAccountDetailScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("打开 Steam 个人资料")
+            Text("Open Steam Profile")
         }
 
         Spacer(Modifier.height(16.dp))
 
-        // 删除账号
+        // Delete account
         Button(
             onClick = {
                 vm.deleteAccount(account)
@@ -90,7 +91,7 @@ fun SteamAccountDetailScreen(
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("删除账号")
+            Text("Delete Account")
         }
     }
 }
