@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import kotlinx.coroutines.flow.MutableSharedFlow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -22,8 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.gamedock.data.model.platformType
 import androidx.lifecycle.viewModelScope
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.repository.DealsRepository
@@ -51,7 +51,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.gamedock.data.model.PlatformType
+import com.example.gamedock.data.repository.AccountsRepository
+import com.example.gamedock.ui.home.AccountWebViewActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.asSharedFlow
 import javax.inject.Inject
 
 
@@ -62,6 +66,33 @@ fun FreebiesScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current   // ★ 新增
+
+    // 监听 Claim 事件
+    LaunchedEffect(Unit) {
+        viewModel.claimEvent.collect { event ->
+            when (event) {
+
+                is ClaimUiEvent.NoAccount -> {
+                    snackbarHostState.showSnackbar("Please log in ${event.platform}")
+
+                }
+
+                is ClaimUiEvent.OpenWebView -> {
+                    val intent = Intent(context, CustomClaimActivity::class.java)
+                    intent.putExtra("account_id", event.accountId)
+                    intent.putExtra("target_url", event.url)
+                    intent.putExtra("platform", event.platform.name)
+                    context.startActivity(intent)
+                }
+
+                is ClaimUiEvent.ExternalBrowser -> {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(event.url))
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(uiState.errorMessage) {
         val message = uiState.errorMessage ?: return@LaunchedEffect
@@ -89,13 +120,19 @@ fun FreebiesScreen(
                 item { SectionHeader("🟢 Free now!!") }
 
                 items(uiState.active) { freebie ->
-                    FreebieCard(freebie = freebie)
+                    FreebieCard(
+                        freebie = freebie,
+                        onClick = { viewModel.onClaimClicked(freebie) } // ★ 修改
+                    )
                 }
 
                 item { SectionHeader("⏳ Upcoming freebies") }
 
                 items(uiState.upcoming) { freebie ->
-                    FreebieCard(freebie = freebie)
+                    FreebieCard(
+                        freebie = freebie,
+                        onClick = { viewModel.onClaimClicked(freebie) } // ★ 修改
+                    )
                 }
             }
 
@@ -125,7 +162,7 @@ fun FreebiesScreen(
 @Composable
 fun FreebieCard(
     freebie: Freebie,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {}   // 这个 onClick 用于 Claim
 ) {
     val context = LocalContext.current
 
@@ -133,7 +170,7 @@ fun FreebieCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 16.dp)
-            .clickable { onClick() },
+            .clickable { /* 原始点击行为 */ },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -198,22 +235,14 @@ fun FreebieCard(
                     color = MaterialTheme.colorScheme.primary
                 )
 
-
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row {
                     Spacer(Modifier.weight(1f))
 
+                    //viewModel -> claim
                     Button(
-                        onClick = {
-                            freebie.claimUrl?.let { url ->
-                                val intent = Intent(
-                                    Intent.ACTION_VIEW,
-                                    Uri.parse(url)
-                                )
-                                context.startActivity(intent)
-                            }
-                        },
+                        onClick = onClick,
                         shape = RoundedCornerShape(12.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
@@ -226,7 +255,6 @@ fun FreebieCard(
 }
 
 
-
 data class FreebiesUiState(
     val isLoading: Boolean = false,
     val active: List<Freebie> = emptyList(),
@@ -237,14 +265,54 @@ data class FreebiesUiState(
 
 @HiltViewModel
 class FreebiesViewModel @Inject constructor(
-    private val repository: DealsRepository
+    private val repository: DealsRepository,
+    private val accountsRepository: AccountsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FreebiesUiState(isLoading = true))
     val uiState: StateFlow<FreebiesUiState> = _uiState.asStateFlow()
 
+    // ★ 新增：Claim 事件
+    private val _claimEvent = MutableSharedFlow<ClaimUiEvent>()
+    val claimEvent = _claimEvent.asSharedFlow()
+
     init {
         refresh()
+    }
+
+    fun onClaimClicked(freebie: Freebie) {
+        viewModelScope.launch {
+
+            val platform = freebie.platformType()
+
+            if (platform == null) {
+                // ★ 非 Epic / Steam → 外部浏览器
+                freebie.claimUrl?.let {
+                    _claimEvent.emit(ClaimUiEvent.ExternalBrowser(it))
+                }
+                return@launch
+            }
+
+            // ★ 支持的平台 → 使用账号系统
+            val accounts = accountsRepository
+                .loadAllAccounts()
+                .filter { it.platform == platform }
+
+            if (accounts.isEmpty()) {
+                _claimEvent.emit(ClaimUiEvent.NoAccount(platform))
+                return@launch
+            }
+
+            val account = accounts.first()
+
+            _claimEvent.emit(
+                ClaimUiEvent.OpenWebView(
+                    accountId = account.id,
+                    url = freebie.claimUrl ?: return@launch,
+                    platform = platform
+                )
+            )
+        }
     }
 
     fun refresh() {
@@ -278,5 +346,19 @@ class FreebiesViewModel @Inject constructor(
                 }
         }
     }
+}
 
+class CustomClaimActivity : AccountWebViewActivity() {
+    override fun resolveConfig(): WebViewConfig? {
+        val accountId = intent.getStringExtra("account_id") ?: return null
+        val url = intent.getStringExtra("target_url") ?: return null
+        val platformName = intent.getStringExtra("platform") ?: return null
+        val platform = PlatformType.valueOf(platformName)
+
+        return WebViewConfig(
+            platform = platform,
+            accountId = accountId,
+            targetUrl = url
+        )
+    }
 }

@@ -23,7 +23,8 @@ data class EpicGameElement(
     val keyImages: List<EpicKeyImage>?,
     val urlSlug: String?,
     val catalogNs: EpicCatalogNs?,
-    val promotions: EpicPromotions?
+    val promotions: EpicPromotions,
+    val price: EpicPrice?
 )
 
 data class EpicCatalogNs(
@@ -42,7 +43,7 @@ data class EpicKeyImage(
 
 data class EpicPromotions(
     val promotionalOffers: List<EpicPromotionWrapper>?,
-    val upcomingPromotionalOffers: List<EpicPromotionWrapper>?
+    val upcomingPromotionalOffers: List<EpicPromotionWrapper>?,
 )
 
 data class EpicPromotionWrapper(
@@ -51,6 +52,24 @@ data class EpicPromotionWrapper(
 
 data class EpicPromotion(
     val startDate: String?,
-    val endDate: String?
+    val endDate: String?,
+    val discountSetting: EpicDiscountSetting?
+)
+
+data class EpicDiscountSetting(
+    val discountType: String?,
+    val discountPercentage: Int?
+)
+
+data class EpicPrice(
+    val totalPrice: EpicTotalPrice?
+)
+
+data class EpicTotalPrice(
+    val discount: Int?,
+    val originalPrice: Int?,
+    val finalPrice: Int?,
+    val discountPrice: Int?,
+    val discountPercentage: Int?
 )
 

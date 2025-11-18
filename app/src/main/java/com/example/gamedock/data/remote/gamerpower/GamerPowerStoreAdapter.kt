@@ -53,9 +53,9 @@ class GamerPowerStoreAdapter @Inject constructor(
         return when {
             "steam" in p -> "Steam"
             "gog" in p -> "GOG"
-//            "ubisoft" in p -> "Ubisoft"
-//            "indiegala" in p -> "IndieGala"
-//            "drm-free" in p -> "DRM-Free"
+            "ubisoft" in p -> "Ubisoft"
+            "indiegala" in p -> "IndieGala"
+            "drm-free" in p -> "DRM-Free"
             else -> "Other"
         }
     }

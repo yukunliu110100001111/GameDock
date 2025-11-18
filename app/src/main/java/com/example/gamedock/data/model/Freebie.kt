@@ -10,3 +10,13 @@ data class Freebie(
     val endDate: String? = null,
     val isClaimed: Boolean = false
 )
+
+fun Freebie.platformType(): PlatformType? {
+    return when (store.lowercase()) {
+        "epic", "epic games", "epic games store" -> PlatformType.Epic
+        "steam" -> PlatformType.Steam
+//        "gog" -> PlatformType.GOG
+//        "ubisoft", "uplay", "ubisoft connect" -> PlatformType.Ubisoft
+        else -> null
+    }
+}
