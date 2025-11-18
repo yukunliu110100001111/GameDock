@@ -25,7 +25,7 @@ fun AddAccountCard(
             modifier = Modifier.padding(24.dp)
         ) {
             Text(
-                text = "+ Add Steam Account",
+                text = "+ Add Account",
                 style = MaterialTheme.typography.titleMedium
             )
         }
