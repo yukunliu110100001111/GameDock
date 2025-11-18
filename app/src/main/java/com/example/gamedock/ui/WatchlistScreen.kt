@@ -10,14 +10,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 @Composable
-fun WatchlistScreen(viewModel: WatchlistViewModel = viewModel()) {
+fun WatchlistScreen(viewModel: WatchlistViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
@@ -58,7 +60,8 @@ data class WatchlistUiState(
     val isEmpty: Boolean = true
 )
 
-class WatchlistViewModel : ViewModel() {
+@HiltViewModel
+class WatchlistViewModel @Inject constructor() : ViewModel() {
     private val _uiState = MutableStateFlow(WatchlistUiState())
     val uiState: StateFlow<WatchlistUiState> = _uiState.asStateFlow()
 }

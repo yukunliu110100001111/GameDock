@@ -10,13 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
-import com.example.gamedock.data.local.EpicAccountStore
 import com.example.gamedock.data.model.account.EpicAccount
-import com.example.gamedock.data.remote.EpicAuthApi
 import com.example.gamedock.ui.Screen
-import com.example.gamedock.ui.home.HomeViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,11 +26,11 @@ fun EpicAccountDetailScreen(
     val parentEntry = remember(navController) {
         navController.getBackStackEntry(Screen.Home.route)
     }
-    val vm: HomeViewModel = viewModel(parentEntry)
+    val vm: HomeViewModel = hiltViewModel(parentEntry)
 
     LaunchedEffect(Unit) {
         if (vm.accounts.value.isEmpty()) {
-            vm.loadAllAccounts(context)
+            vm.loadAllAccounts()
         }
     }
 
@@ -94,24 +91,8 @@ fun EpicAccountDetailScreen(
             onClick = {
                 scope.launch {
                     status = "刷新 Token 中..."
-
-                    val result = EpicAuthApi.refreshToken(account.refreshToken)
-
-                    if (result != null && result.has("access_token")) {
-                        val newAccess = result.getString("access_token")
-                        val newRefresh = result.getString("refresh_token")
-
-                        val updated = account.copy(
-                            accessToken = newAccess,
-                            refreshToken = newRefresh
-                        )
-
-                        EpicAccountStore.saveAccount(context, updated)
-                        vm.loadAllAccounts(context)
-                        status = "Token 已刷新！"
-                    } else {
-                        status = "刷新失败，请稍后再试"
-                    }
+                    val success = vm.refreshEpicAccount(account)
+                    status = if (success) "Token 已刷新！" else "刷新失败，请稍后再试"
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -124,8 +105,7 @@ fun EpicAccountDetailScreen(
         // 删除账号
         Button(
             onClick = {
-                EpicAccountStore.delete(context, account.id)
-                vm.loadAllAccounts(context)
+                vm.deleteAccount(account)
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),

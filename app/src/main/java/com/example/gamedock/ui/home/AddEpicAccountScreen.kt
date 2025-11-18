@@ -12,24 +12,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.gamedock.data.local.EpicAccountStore
-import com.example.gamedock.data.model.account.EpicAccount
-import com.example.gamedock.data.remote.EpicAuthApi
-import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun AddEpicAccountScreen(navController: NavController) {
+fun AddEpicAccountScreen(
+    navController: NavController,
+    viewModel: AddEpicAccountViewModel = hiltViewModel()
+) {
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
 
-    var statusText by remember {
-        mutableStateOf("点击下方按钮，在官方页面登录你的 Epic 账号。")
+    LaunchedEffect(uiState.isCompleted) {
+        if (uiState.isCompleted) {
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set("account_added", true)
+            viewModel.resetCompletionFlag()
+            navController.popBackStack()
+        }
     }
-    var isProcessing by remember { mutableStateOf(false) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -37,49 +42,12 @@ fun AddEpicAccountScreen(navController: NavController) {
         if (result.resultCode == Activity.RESULT_OK) {
             val code = result.data?.getStringExtra(EpicLoginActivity.EXTRA_AUTH_CODE)
             if (!code.isNullOrBlank()) {
-                scope.launch {
-                    isProcessing = true
-                    statusText = "授权中，请稍候..."
-
-                    val tokenResult = EpicAuthApi.exchangeAuthCodeForToken(code)
-                    if (tokenResult != null && tokenResult.has("access_token")) {
-                        val accessToken = tokenResult.getString("access_token")
-                        val refreshToken = tokenResult.getString("refresh_token")
-                        val accountId = tokenResult.optString("account_id")
-
-                        val verifyResult = EpicAuthApi.verifyAccessToken(accessToken)
-                        val nickname = verifyResult?.optString("displayName")
-                            ?: "Epic User"
-                        val resolvedId = when {
-                            accountId.isNotBlank() -> accountId
-                            verifyResult?.has("account_id") == true ->
-                                verifyResult.getString("account_id")
-                            else -> accessToken.takeLast(16)
-                        }
-
-                        val account = EpicAccount(
-                            id = resolvedId,
-                            accessToken = accessToken,
-                            refreshToken = refreshToken,
-                            nickname = nickname,
-                            avatar = ""
-                        )
-
-                        EpicAccountStore.saveAccount(context, account)
-
-                        statusText = "账号已保存！"
-                        isProcessing = false
-                        navController.popBackStack()
-                    } else {
-                        statusText = "授权失败，请重试。"
-                        isProcessing = false
-                    }
-                }
+                viewModel.completeAuthorization(code)
             } else {
-                statusText = "未能获取授权 code，请重试。"
+                viewModel.onMissingCode()
             }
         } else {
-            statusText = "已取消 Epic 登录流程。"
+            viewModel.onLoginCancelled()
         }
     }
 
@@ -93,7 +61,12 @@ fun AddEpicAccountScreen(navController: NavController) {
 
         Spacer(Modifier.height(24.dp))
 
-        Text(statusText)
+        Text(uiState.statusMessage)
+
+        uiState.errorMessage?.let { error ->
+            Spacer(Modifier.height(12.dp))
+            Text(error, color = MaterialTheme.colorScheme.error)
+        }
 
         Spacer(Modifier.height(32.dp))
 
@@ -102,13 +75,13 @@ fun AddEpicAccountScreen(navController: NavController) {
                 val intent = Intent(context, EpicLoginActivity::class.java)
                 launcher.launch(intent)
             },
-            enabled = !isProcessing,
+            enabled = !uiState.isProcessing,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(if (isProcessing) "处理中..." else "打开 Epic 登录")
+            Text(if (uiState.isProcessing) "处理中..." else "打开 Epic 登录")
         }
 
-        if (isProcessing) {
+        if (uiState.isProcessing) {
             Spacer(Modifier.height(24.dp))
             CircularProgressIndicator()
         }

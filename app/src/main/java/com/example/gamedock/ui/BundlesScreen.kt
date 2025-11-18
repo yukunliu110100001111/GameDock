@@ -9,14 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 @Composable
-fun BundlesScreen(viewModel: BundlesViewModel = viewModel()) {
+fun BundlesScreen(viewModel: BundlesViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
@@ -49,7 +51,8 @@ data class BundlesUiState(
     val bundles: List<String> = emptyList()
 )
 
-class BundlesViewModel : ViewModel() {
+@HiltViewModel
+class BundlesViewModel @Inject constructor() : ViewModel() {
     private val _uiState = MutableStateFlow(BundlesUiState(isLoading = false))
     val uiState: StateFlow<BundlesUiState> = _uiState.asStateFlow()
 }

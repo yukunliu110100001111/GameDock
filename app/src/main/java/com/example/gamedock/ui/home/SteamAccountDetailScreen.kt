@@ -10,12 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
-import com.example.gamedock.data.local.SteamAccountStore
 import com.example.gamedock.data.model.account.SteamAccount
 import com.example.gamedock.ui.Screen
-import com.example.gamedock.ui.home.HomeViewModel
 
 @Composable
 fun SteamAccountDetailScreen(
@@ -26,11 +24,11 @@ fun SteamAccountDetailScreen(
     val parentEntry = remember(navController) {
         navController.getBackStackEntry(Screen.Home.route)
     }
-    val vm: HomeViewModel = viewModel(parentEntry)
+    val vm: HomeViewModel = hiltViewModel(parentEntry)
 
     LaunchedEffect(Unit) {
         if (vm.accounts.value.isEmpty()) {
-            vm.loadAllAccounts(context)
+            vm.loadAllAccounts()
         }
     }
 
@@ -68,8 +66,12 @@ fun SteamAccountDetailScreen(
         // 打开 Steam 个人资料
         Button(
             onClick = {
-                val url = "https://steamcommunity.com/profiles/${account.id}"
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                val intent = Intent(context, SteamProfileActivity::class.java).apply {
+                    putExtra(
+                        SteamProfileActivity.EXTRA_PROFILE_URL,
+                        "https://steamcommunity.com/profiles/${account.id}"
+                    )
+                }
                 context.startActivity(intent)
             },
             modifier = Modifier.fillMaxWidth()
@@ -82,8 +84,7 @@ fun SteamAccountDetailScreen(
         // 删除账号
         Button(
             onClick = {
-                SteamAccountStore.delete(context, account.id)
-                vm.loadAllAccounts(context) // 刷新
+                vm.deleteAccount(account)
                 navController.popBackStack()
             },
             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),

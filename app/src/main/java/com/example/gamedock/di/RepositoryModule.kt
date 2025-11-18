@@ -1,7 +1,11 @@
 package com.example.gamedock.di
 
+import com.example.gamedock.data.repository.AccountsRepository
+import com.example.gamedock.data.repository.AccountsRepositoryImpl
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.data.repository.DealsRepositoryImpl
+import com.example.gamedock.data.repository.EpicAuthRepository
+import com.example.gamedock.data.repository.EpicAuthRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -18,9 +22,15 @@ abstract class RepositoryModule {
         dealsRepositoryImpl: DealsRepositoryImpl
     ): DealsRepository
 
-//    fun bindDealsRepository(): DealsRepository {
-//        val api = EpicApiClient.api
-//        val adapter = EpicStoreAdapter(api)
-//        return DealsRepositoryImpl(adapter)
-//    }
+    @Binds
+    @Singleton
+    abstract fun bindAccountsRepository(
+        impl: AccountsRepositoryImpl
+    ): AccountsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindEpicAuthRepository(
+        impl: EpicAuthRepositoryImpl
+    ): EpicAuthRepository
 }

@@ -1,45 +1,57 @@
 package com.example.gamedock.ui.home
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.gamedock.data.local.EpicAccountStore
-import com.example.gamedock.data.local.SteamAccountStore
-import com.example.gamedock.data.model.account.PlatformAccount
 import com.example.gamedock.data.model.PlatformType
-import com.example.gamedock.data.model.account.SteamAccount
-import com.example.gamedock.data.remote.SteamApi
+import com.example.gamedock.data.model.account.EpicAccount
+import com.example.gamedock.data.model.account.PlatformAccount
+import com.example.gamedock.data.repository.AccountsRepository
+import com.example.gamedock.data.repository.EpicAuthRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class HomeViewModel : ViewModel() {
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val accountsRepository: AccountsRepository,
+    private val epicAuthRepository: EpicAuthRepository
+) : ViewModel() {
 
     private val _accounts = MutableStateFlow<List<PlatformAccount>>(emptyList())
     val accounts: StateFlow<List<PlatformAccount>> = _accounts
 
-    fun loadAllAccounts(context: Context) {
+    fun loadAllAccounts() {
         viewModelScope.launch {
-
-            val steam = SteamAccountStore.loadAll(context)
-            val epic = EpicAccountStore.loadAll(context)
-
-            val merged: MutableList<PlatformAccount> = mutableListOf()
-            merged.addAll(steam)
-            merged.addAll(epic)
-
-            _accounts.value = merged
+            _accounts.value = accountsRepository.loadAllAccounts()
         }
     }
 
-    fun deleteAccount(context: Context, account: PlatformAccount) {
-        when (account.platform) {
-            PlatformType.Steam -> SteamAccountStore.delete(context, account.id)
-            PlatformType.Epic -> EpicAccountStore.delete(context, account.id)
+    fun deleteAccount(account: PlatformAccount) {
+        viewModelScope.launch {
+            when (account.platform) {
+                PlatformType.Steam -> accountsRepository.deleteSteamAccount(account.id)
+                PlatformType.Epic -> accountsRepository.deleteEpicAccount(account.id)
+            }
+            _accounts.value = accountsRepository.loadAllAccounts()
         }
-        loadAllAccounts(context)
+    }
+
+    suspend fun refreshEpicAccount(account: EpicAccount): Boolean {
+        val tokens = epicAuthRepository.refreshTokens(account.refreshToken) ?: return false
+        accountsRepository.saveEpicAccount(
+            account.copy(
+                accessToken = tokens.accessToken,
+                refreshToken = tokens.refreshToken,
+                nickname = tokens.displayName ?: account.nickname
+            )
+        )
+        withContext(Dispatchers.Main) {
+            _accounts.value = accountsRepository.loadAllAccounts()
+        }
+        return true
     }
 }

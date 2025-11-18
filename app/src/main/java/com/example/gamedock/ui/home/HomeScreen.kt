@@ -8,9 +8,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.gamedock.ui.Screen
 import com.example.gamedock.ui.components.AccountCard
@@ -19,12 +18,11 @@ import com.example.gamedock.ui.components.AddAccountCard
 @Composable
 fun HomeScreen(navController: NavController) {
 
-    val context = LocalContext.current
-    val vm: HomeViewModel = viewModel()
+    val vm: HomeViewModel = hiltViewModel()
     val accounts by vm.accounts.collectAsState()
 
     LaunchedEffect(Unit) {
-        vm.loadAllAccounts(context)
+        vm.loadAllAccounts()
     }
 
     LazyColumn(Modifier.padding(16.dp)) {
@@ -39,7 +37,7 @@ fun HomeScreen(navController: NavController) {
                 },
 
                 onDelete = { acc ->
-                    vm.deleteAccount(context, acc)
+                    vm.deleteAccount(acc)
                 }
             )
         }

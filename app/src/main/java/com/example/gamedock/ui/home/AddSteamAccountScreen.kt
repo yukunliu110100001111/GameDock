@@ -11,22 +11,33 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.gamedock.data.local.SteamAccountStore
-import com.example.gamedock.data.model.account.SteamAccount
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun AddSteamAccountScreen(navController: NavController) {
-
-    val context = LocalContext.current
+fun AddSteamAccountScreen(
+    navController: NavController,
+    viewModel: AddSteamAccountViewModel = hiltViewModel()
+) {
 
     var secure by remember { mutableStateOf("") }
     var sessionId by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isSaved) {
+        if (uiState.isSaved) {
+            navController.previousBackStackEntry
+                ?.savedStateHandle
+                ?.set("account_added", true)
+            viewModel.resetSavedFlag()
+            navController.popBackStack()
+        }
+    }
 
     Column(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
         Text(
@@ -54,35 +65,22 @@ fun AddSteamAccountScreen(navController: NavController) {
 
         Button(
             onClick = {
-                // 保存账号
-                val account = SteamAccount(
-                    id = extractSteamId(secure),
-                    steamLoginSecure = secure,
-                    sessionid = sessionId,
-                    nickname = "Steam User"
-                )
-
-                SteamAccountStore.saveAccount(context, account)
-
-                // 给 HomeScreen 一个刷新信号
-                navController.previousBackStackEntry
-                    ?.savedStateHandle
-                    ?.set("account_added", true)
-
-                navController.popBackStack()
+                viewModel.saveAccount(secure, sessionId)
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp)
+                .padding(top = 24.dp),
+            enabled = secure.isNotBlank() && sessionId.isNotBlank() && !uiState.isSaving
         ) {
-            Text("Save Account")
+            Text(if (uiState.isSaving) "Saving..." else "Save Account")
+        }
+
+        uiState.errorMessage?.let { error ->
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 12.dp)
+            )
         }
     }
-}
-
-fun extractSteamId(steamLoginSecure: String): String {
-    return steamLoginSecure
-        .split("%7C%7C", "||")
-        .firstOrNull()
-        ?: "Unknown"
 }

@@ -22,26 +22,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamedock.data.model.Offer
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.ui.components.PriceCard
 import com.example.gamedock.ui.components.SectionHeader
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompareScreen(
-    repository: DealsRepository,
-    viewModel: CompareViewModel = viewModel(factory = CompareViewModel.factory(repository))
+    viewModel: CompareViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val errorMessage = uiState.errorMessage
@@ -107,7 +107,8 @@ data class CompareUiState(
     val errorMessage: String? = null
 )
 
-class CompareViewModel(
+@HiltViewModel
+class CompareViewModel @Inject constructor(
     private val repository: DealsRepository
 ) : ViewModel() {
 
@@ -151,16 +152,4 @@ class CompareViewModel(
         }
     }
 
-    companion object {
-        fun factory(repository: DealsRepository): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    if (modelClass.isAssignableFrom(CompareViewModel::class.java)) {
-                        return CompareViewModel(repository) as T
-                    }
-                    throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
-                }
-            }
-    }
 }

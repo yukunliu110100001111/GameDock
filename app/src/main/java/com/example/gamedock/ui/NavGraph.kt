@@ -4,8 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.gamedock.data.local.SteamAccountStore
-import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.ui.home.AccountDetailRouterScreen
 import com.example.gamedock.ui.home.AccountScreen
 import com.example.gamedock.ui.home.AddAccountScreen
@@ -15,8 +13,7 @@ import com.example.gamedock.ui.home.AddSteamAccountScreen
 
 @Composable
 fun NavGraph(
-    navController: NavHostController,
-    repository: DealsRepository
+    navController: NavHostController
 ) {
     NavHost(
         navController = navController,
@@ -25,12 +22,8 @@ fun NavGraph(
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)
         }
-        composable(Screen.Freebies.route) {
-            FreebiesScreen()
-        }
-        composable(Screen.Compare.route) {
-            CompareScreen(repository = repository)
-        }
+        composable(Screen.Freebies.route) { FreebiesScreen() }
+        composable(Screen.Compare.route) { CompareScreen() }
         composable(Screen.Watchlist.route) {
             WatchlistScreen()
         }
