@@ -60,4 +60,12 @@ interface ItadApiService {
 
     ): GamePriceDetailsResponse
 
+    @GET("games/bundles/v2")
+    suspend fun getGameBundles(
+        @Query("key") apiKey: String,
+        @Query("id") gameId: String,
+        @Query("country") country: String,
+        @Query("expired") expired: Boolean = false
+    ): GameBundlesResponse
+
 }

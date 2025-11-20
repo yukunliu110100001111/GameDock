@@ -52,8 +52,8 @@ data class PriceDetails(
 
 data class LowestPrice(
     val shop: Shop,
-    val price: Price, // historical low price
-    val regular: Price, // original price when the low was recorded
+    val price: Price, // 史低价格
+    val regular: Price, // 当时的原价
 )
 
 data class Shop(
@@ -73,7 +73,7 @@ data class Drm(
 )
 
 data class GameUrls(
-    val game: String // link to the game page on ITAD
+    val game: String // 游戏在 ITAD 上的链接
 )
 
 // ------------------- Detailed Price Data ------------------
@@ -81,34 +81,61 @@ data class GameUrls(
 typealias GamePriceDetailsResponse = List<GamePriceDetails>
 
 /**
- * Detailed info for a single game (each entry in the list).
+ * 单个游戏详情，对应列表中的每个元素。
  */
 data class GamePriceDetails(
-    val id: String, // game identifier
-    val historyLow: HistoryLow, // aggregated price history
-    val deals: List<Deal> // current deals
+    val id: String, // 游戏ID
+    val historyLow: HistoryLow, // 历史低价
+    val deals: List<Deal> // 当前所有优惠
 )
 
 /**
- * Aggregated historical lows.
+ * 3. 历史低价 (聚合)
  */
 data class HistoryLow(
-    val all: Price, // all-time low
-    val y1: Price, // low within the last year
-    val m3: Price // low within the last three months
+    val all: Price, // 全时段史低
+    val y1: Price, // 1年内史低
+    val m3: Price // 3个月内史低
 )
 
 /**
- * Single deal details (each entry in the `deals` list).
+ * 4. 单个优惠详情
+ * 对应 "deals" 数组中的每个元素。
  */
 data class Deal(
     val shop: Shop,
-    val price: Price, // current price
-    val regular: Price, // original price
-    val cut: Int, // discount percent
-    val storeLow: Price?, // lowest price on this store
+    val price: Price, // 当前售价
+    val regular: Price, // 原价
+    val cut: Int, // 折扣
+    val storeLow: Price?, // 本店史低
     val drm: List<Drm>,
     val url: String
 )
 
+// ------------------- Bundles ------------------
 
+typealias GameBundlesResponse = List<BundleDetail>
+
+data class BundleDetail(
+    val id: Int,
+    val title: String,
+    val url: String, // 购买链接
+    val page: BundlePage, // 包含商店信息
+    val publish: String, // 发布时间
+    val expiry: String?, // 过期时间 (可能为空)
+    val tiers: List<BundleTier> // 价格层级
+)
+
+data class BundlePage(
+    val name: String
+)
+
+data class BundleTier(
+    val price: Price,
+    val games: List<BundleGameItem>
+)
+
+data class BundleGameItem(
+    val title: String,
+    val assets: ItadAssets? = null
+)

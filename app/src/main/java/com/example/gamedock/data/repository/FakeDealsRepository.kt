@@ -1,7 +1,7 @@
 package com.example.gamedock.data.repository
 
+import com.example.gamedock.data.model.BundleInfo
 import com.example.gamedock.data.model.Freebie
-import com.example.gamedock.data.model.Game
 import com.example.gamedock.data.model.Offer
 import kotlinx.coroutines.delay
 
@@ -78,5 +78,9 @@ class FakeDealsRepository : DealsRepository {
             offer.gameTitle.contains(query, ignoreCase = true) ||
                 offer.store.contains(query, ignoreCase = true)
         }
+    }
+
+    override suspend fun searchBundles(query: String): List<BundleInfo> {
+        return emptyList()
     }
 }

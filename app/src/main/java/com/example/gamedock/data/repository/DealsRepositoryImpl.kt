@@ -1,11 +1,11 @@
 package com.example.gamedock.data.repository
 
+import com.example.gamedock.data.model.BundleInfo
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Offer
 import com.example.gamedock.data.remote.epic.EpicStoreAdapter
 import com.example.gamedock.data.remote.gamerpower.GamerPowerStoreAdapter
 import com.example.gamedock.data.remote.itad.ItadAdapter
-import com.example.gamedock.data.remote.itad.ItadApiService
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,5 +28,9 @@ class DealsRepositoryImpl @Inject constructor(
 
     override suspend fun comparePrices(query: String): List<Offer> {
         return itadAdapter.comparePrices(query)
+    }
+
+    override suspend fun searchBundles(query: String): List<BundleInfo> {
+        return itadAdapter.searchBundles(query)
     }
 }

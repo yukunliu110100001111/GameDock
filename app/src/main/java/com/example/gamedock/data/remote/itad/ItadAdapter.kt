@@ -1,6 +1,7 @@
 package com.example.gamedock.data.remote.itad
 
 import android.util.Log
+import com.example.gamedock.data.model.BundleInfo
 import com.example.gamedock.data.model.Offer
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -136,6 +137,48 @@ class ItadAdapter @Inject constructor(
                 url = currentPriceDetails.url
             )
         } ?: emptyList()
+    }
+
+    suspend fun searchBundles(gameQuery: String): List<BundleInfo> {
+        try {
+            val searchResults = itadApiService.searchGame(
+                apiKey = ITAD_API_KEY,
+                title = gameQuery,
+                resultCount = 1
+            )
+
+            val gameId = searchResults.firstOrNull()?.id ?: return emptyList()
+
+            val bundlesResponse = itadApiService.getGameBundles(
+                apiKey = ITAD_API_KEY,
+                gameId = gameId,
+                country = "US"
+            )
+
+            return bundlesResponse.map { bundle ->
+                val firstTier = bundle.tiers.firstOrNull()
+                val priceAmount = firstTier?.price?.amount ?: 0.0
+                val priceCurrency = firstTier?.price?.currency ?: "USD"
+
+                // try to get cover image from the first game in the first tier
+                val coverImage = firstTier?.games?.firstOrNull()?.assets?.banner600
+                    ?: firstTier?.games?.firstOrNull()?.assets?.boxart
+
+                BundleInfo(
+                    title = bundle.title,
+                    store = bundle.page.name,
+                    price = priceAmount,
+                    currency = priceCurrency,
+                    expiry = bundle.expiry,
+                    link = bundle.url,
+                    imageUrl = coverImage
+                )
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return emptyList()
+        }
     }
 
 }
