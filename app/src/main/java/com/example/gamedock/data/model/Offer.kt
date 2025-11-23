@@ -10,5 +10,6 @@ data class Offer(
     val currentPrice: Double,
     val lowestPrice: Double,
     val currencyCode: String = "USD",
-    val url: String? = null
+    val url: String? = null,
+    val imageUrl: String? = null
 )

@@ -44,7 +44,7 @@ data class GamePriceInfo(
 data class PriceDetails(
     val shop: Shop,
     val price: Price, // current price
-    val regular: Price, // original price
+    val regular: Price, // original list price
     val drm: List<Drm>,
     val url: String
 )
@@ -52,8 +52,8 @@ data class PriceDetails(
 
 data class LowestPrice(
     val shop: Shop,
-    val price: Price, // 史低价格
-    val regular: Price, // 当时的原价
+    val price: Price, // historical lowest price
+    val regular: Price, // original price at that moment
 )
 
 data class Shop(
@@ -73,7 +73,7 @@ data class Drm(
 )
 
 data class GameUrls(
-    val game: String // 游戏在 ITAD 上的链接
+    val game: String // game page URL on ITAD
 )
 
 // ------------------- Detailed Price Data ------------------
@@ -81,33 +81,32 @@ data class GameUrls(
 typealias GamePriceDetailsResponse = List<GamePriceDetails>
 
 /**
- * 单个游戏详情，对应列表中的每个元素。
+ * Single game price details entry.
  */
 data class GamePriceDetails(
-    val id: String, // 游戏ID
-    val historyLow: HistoryLow, // 历史低价
-    val deals: List<Deal> // 当前所有优惠
+    val id: String, // game ID
+    val historyLow: HistoryLow, // aggregated historical lowest prices
+    val deals: List<Deal> // all current deals
 )
 
 /**
- * 3. 历史低价 (聚合)
+ * Aggregated historical low pricing.
  */
 data class HistoryLow(
-    val all: Price, // 全时段史低
-    val y1: Price, // 1年内史低
-    val m3: Price // 3个月内史低
+    val all: Price, // all-time low
+    val y1: Price, // 1-year low
+    val m3: Price // 3-month low
 )
 
 /**
- * 4. 单个优惠详情
- * 对应 "deals" 数组中的每个元素。
+ * Single deal entry within the deals list.
  */
 data class Deal(
     val shop: Shop,
-    val price: Price, // 当前售价
-    val regular: Price, // 原价
-    val cut: Int, // 折扣
-    val storeLow: Price?, // 本店史低
+    val price: Price, // current price
+    val regular: Price, // original price
+    val cut: Int, // discount percentage
+    val storeLow: Price?, // store-specific historical low
     val drm: List<Drm>,
     val url: String
 )
@@ -119,11 +118,11 @@ typealias GameBundlesResponse = List<BundleDetail>
 data class BundleDetail(
     val id: Int,
     val title: String,
-    val url: String, // 购买链接
-    val page: BundlePage, // 包含商店信息
-    val publish: String, // 发布时间
-    val expiry: String?, // 过期时间 (可能为空)
-    val tiers: List<BundleTier> // 价格层级
+    val url: String, // purchase link
+    val page: BundlePage, // store/page info
+    val publish: String, // publish time
+    val expiry: String?, // expiry time (nullable)
+    val tiers: List<BundleTier> // pricing tiers
 )
 
 data class BundlePage(
