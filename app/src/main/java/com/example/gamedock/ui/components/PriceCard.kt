@@ -33,7 +33,7 @@ import com.example.gamedock.data.model.Offer
 import com.example.gamedock.data.util.CurrencyUtils
 
 @Composable
-fun PriceCard(offer: Offer, onOpenStore: (Offer) -> Unit = {}) {
+fun PriceCard(offer: Offer, onOpenStore: (Offer) -> Unit = {}, onAddWatchlist: (Offer)  -> Unit = {}) {
     val uriHandler = LocalUriHandler.current
     val diffPercent: Double? = if (offer.lowestPrice > 0 && offer.currentPrice > offer.lowestPrice) {
         ((offer.currentPrice - offer.lowestPrice) / offer.lowestPrice) * 100
@@ -139,6 +139,13 @@ fun PriceCard(offer: Offer, onOpenStore: (Offer) -> Unit = {}) {
                 ) {
                     Text(if (offer.url != null) "Store" else "No Link")
                 }
+
+                TextButton(
+                    onClick = { onAddWatchlist(offer) }
+                ) {
+                    Text("Watchlist")
+                }
+
             }
         }
     }

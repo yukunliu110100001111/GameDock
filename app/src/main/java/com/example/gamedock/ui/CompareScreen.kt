@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -54,13 +55,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gamedock.R
+import com.example.gamedock.data.local.entity.WatchlistEntity
+import com.example.gamedock.data.repository.WatchlistRepository
+import com.example.gamedock.data.repository.WatchlistRepositoryImpl
 import com.example.gamedock.data.util.CurrencyUtils
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CompareScreen(
+    queryFromRoute: String,
     viewModel: CompareViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(queryFromRoute) {
+        if (queryFromRoute.isNotBlank()) {
+            viewModel.setInitialQuery(queryFromRoute)
+        }
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val errorMessage = uiState.errorMessage
 
@@ -69,7 +81,6 @@ fun CompareScreen(
             .fillMaxSize()
             .padding(Dimens.screenPadding)
     ) {
-        // 搜索框：清空按钮 + 加载指示
         OutlinedTextField(
             value = uiState.query,
             onValueChange = viewModel::onSearchQueryChange,
@@ -81,7 +92,10 @@ fun CompareScreen(
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (uiState.isLoading) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                     }
                     if (uiState.query.isNotEmpty()) {
@@ -95,13 +109,13 @@ fun CompareScreen(
 
         Spacer(modifier = Modifier.height(Dimens.cardSpacing))
 
-        // Header 行：标题 + 结果数 + 排序按钮
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            val countText = if (!uiState.isLoading && uiState.results.isNotEmpty()) " (" + uiState.results.size + ")" else ""
+            val countText = if (!uiState.isLoading && uiState.results.isNotEmpty())
+                " (" + uiState.results.size + ")" else ""
             Text(
                 text = "💰 Price Comparison$countText",
                 style = MaterialTheme.typography.headlineSmall,
@@ -111,7 +125,6 @@ fun CompareScreen(
             }
         }
 
-        // 最优报价摘要
         BestOfferSummary(uiState.results)
 
         if (uiState.isLoading) {
@@ -126,7 +139,6 @@ fun CompareScreen(
             )
         }
 
-        // 无结果且有搜索词且无错误
         if (!uiState.isLoading && uiState.results.isEmpty() && uiState.query.isNotBlank() && errorMessage == null) {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -153,15 +165,16 @@ fun CompareScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = Dimens.screenPadding)
         ) {
-            // 骨架
             if (uiState.isLoading) {
                 items(4) { SkeletonPriceCard() }
             }
-            // 真实数据
             itemsIndexed(uiState.results) { index, offer ->
                 val isBest = uiState.resultsMinPrice() == offer.currentPrice
                 Box(Modifier.fillMaxWidth()) {
-                    PriceCard(offer = offer)
+                    PriceCard(
+                        offer = offer,
+                        onAddWatchlist = { viewModel.addToWatchlist(it) }
+                    )
                     if (isBest) {
                         BestBadge(Modifier.align(Alignment.TopEnd))
                     }
@@ -170,6 +183,7 @@ fun CompareScreen(
         }
     }
 }
+
 
 @Composable
 private fun BestOfferSummary(results: List<Offer>) {
@@ -246,7 +260,9 @@ data class CompareUiState(
 
 @HiltViewModel
 class CompareViewModel @Inject constructor(
-    private val repository: DealsRepository
+    private val repository: DealsRepository,
+    private val watchlistRepository: WatchlistRepository
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CompareUiState())
@@ -297,6 +313,30 @@ class CompareViewModel @Inject constructor(
                         errorMessage = throwable.message ?: "Unable to compare prices"
                     )
                 }
+        }
+    }
+
+
+    fun addToWatchlist(offer: Offer) {
+        viewModelScope.launch {
+            val entry = WatchlistEntity(
+                gameId = offer.id,
+                title = offer.gameTitle,
+                imageUrl = offer.imageUrl,
+                url = offer.url,
+                lastKnownPrice = offer.currentPrice,
+                currency = offer.currencyCode,
+                preferredStores = listOf(offer.store)
+            )
+
+            watchlistRepository.addOrUpdate(entry)
+        }
+    }
+
+    fun setInitialQuery(q: String) {
+        if (q.isNotBlank() && _uiState.value.query != q) {
+            _uiState.value = _uiState.value.copy(query = q)
+            searchNow()
         }
     }
 

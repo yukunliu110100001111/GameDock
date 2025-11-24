@@ -2,8 +2,10 @@ package com.example.gamedock.ui
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.gamedock.ui.home.AccountDetailRouterScreen
 import com.example.gamedock.ui.home.AccountScreen
 import com.example.gamedock.ui.home.AddAccountScreen
@@ -23,9 +25,27 @@ fun NavGraph(
             HomeScreen(navController = navController)
         }
         composable(Screen.Freebies.route) { FreebiesScreen() }
-        composable(Screen.Compare.route) { CompareScreen() }
+        composable(
+            route = "compare?query={query}",
+            arguments = listOf(
+                navArgument("query") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            CompareScreen(
+                queryFromRoute = backStackEntry.arguments?.getString("query") ?: ""
+            )
+        }
+
+
         composable(Screen.Watchlist.route) {
-            WatchlistScreen()
+            WatchlistScreen(
+                onOpenCompare = { query ->
+                    navController.navigate("compare?query=$query")
+                }
+            )
         }
         composable(Screen.Bundles.route) {
             BundlesScreen()
