@@ -1,6 +1,8 @@
 package com.example.gamedock.ui
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -8,15 +10,27 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.example.gamedock.notifications.PriceDropNotifier
+import com.example.gamedock.worker.PriceCheckWorker
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import java.util.concurrent.TimeUnit
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    // 注入通知器（需要创建 channel）
+    @Inject lateinit var notifier: PriceDropNotifier
 
     private val requestNotificationPermission =
         registerForActivityResult(
             ActivityResultContracts.RequestPermission()
         ) { granted ->
+            // no action needed
         }
 
     private fun askNotificationPermission() {
@@ -32,10 +46,28 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun schedulePriceCheckWorker() {
+        val request = PeriodicWorkRequestBuilder<PriceCheckWorker>(
+            6, TimeUnit.HOURS
+        ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "price_check_worker",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            request
+        )
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         askNotificationPermission()
+
+        // 创建 Notification Channel
+        notifier.createNotificationChannel()
+
+        // 注册 Worker（必须）
+        schedulePriceCheckWorker()
 
         setContent {
             GameDockApp()
