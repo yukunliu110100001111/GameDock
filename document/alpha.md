@@ -58,9 +58,7 @@ The Alpha focus is not on full backend integration yet, but on:
   - An in-memory watchlist model (`WatchItem`) and a simple `ManageWatchlistUseCase` using `StateFlow`.
   - UI shows basic information about tracked items (no Room persistence yet).
 
-- **Bundles**:
-  - `BundlesScreen` and `BundlesViewModel` created as a dedicated entry point for charity / bundle deals.
-  - `BundleInfo` domain model defined for future integration (source, min price, games, expiry).
+ - **Bundles**: （已合入 Compare）暂无单独入口，后续慈善包信息将直接显示在价格比价结果顶部。
 
 - **Settings**:
   - Basic settings UI with switches for things like deal alerts (currently local state).

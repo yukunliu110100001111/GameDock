@@ -17,13 +17,12 @@ app/
    │   ├─ FreebiesScreen.kt       # Loads freebies via DealsRepository
    │   ├─ CompareScreen.kt        # Price query + results
    │   ├─ WatchlistScreen.kt      # Placeholder in-memory state
-   │   ├─ BundlesScreen.kt        # Placeholder bundles state
    │   ├─ SettingsScreen.kt       # Notification toggle
    │   ├─ UiDefaults.kt           # Shared Dimens + Strings
    │   └─ components/             # GameCard, PriceCard, SectionHeader
    │
    ├─ data/
-   │   ├─ model/                  # Game, Offer, BundleInfo, WatchItem, etc.
+   │   ├─ model/                  # Game, Offer, BundleDeal, WatchItem, etc.
    │   ├─ repository/
    │   │   ├─ DealsRepository.kt
    │   │   ├─ FakeDealsRepository.kt

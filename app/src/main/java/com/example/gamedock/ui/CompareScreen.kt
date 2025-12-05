@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -35,8 +37,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -44,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamedock.data.model.Offer
+import com.example.gamedock.data.model.BundleDeal
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.ui.components.PriceCard
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -139,7 +145,12 @@ fun CompareScreen(
             )
         }
 
-        if (!uiState.isLoading && uiState.results.isEmpty() && uiState.query.isNotBlank() && errorMessage == null) {
+        if (!uiState.isLoading &&
+            uiState.results.isEmpty() &&
+            uiState.bundles.isEmpty() &&
+            uiState.query.isNotBlank() &&
+            errorMessage == null
+        ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -163,20 +174,44 @@ fun CompareScreen(
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = Dimens.screenPadding)
+            contentPadding = PaddingValues(
+                horizontal = Dimens.screenPadding,
+                vertical = Dimens.cardSpacing
+            ),
+            verticalArrangement = Arrangement.spacedBy(Dimens.cardSpacing)
         ) {
             if (uiState.isLoading) {
                 items(4) { SkeletonPriceCard() }
             }
+
+            if (uiState.bundles.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Bundles (${uiState.bundles.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
+                items(uiState.bundles) { bundle ->
+                    BundleCard(bundle)
+                }
+            }
+
             itemsIndexed(uiState.results) { index, offer ->
                 val isBest = uiState.resultsMinPrice() == offer.currentPrice
-                Box(Modifier.fillMaxWidth()) {
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp)
+                ) {
                     PriceCard(
                         offer = offer,
-                        onAddWatchlist = { viewModel.addToWatchlist(it) }
+                        isWatchlisted = uiState.watchlistedIds.contains(offer.id),
+                        onToggleWatchlist = { viewModel.toggleWatchlist(it) }
                     )
                     if (isBest) {
-                        BestBadge(Modifier.align(Alignment.TopEnd))
+                        BestBadge(Modifier.align(Alignment.TopStart))
                     }
                 }
             }
@@ -220,17 +255,21 @@ private fun BestOfferSummary(results: List<Offer>) {
 private fun BestBadge(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
-            .padding(end = 8.dp, top = 4.dp)
-            .clip(RoundedCornerShape(50)),
-        color = MaterialTheme.colorScheme.primaryContainer,
-        tonalElevation = 0.dp
+            // 【修改这里】：调整 padding，让它离左上角有一点距离，或者直接贴合
+            // 既然在图片上，稍微留一点距离(4.dp)会更有层次感
+            .padding(start = 6.dp, top = 6.dp) 
+            .clip(RoundedCornerShape(4.dp)), // 稍微圆角一点，不要太圆(50)也不要太方
+        color = MaterialTheme.colorScheme.primary, // 建议用深色背景(primary)，文字用浅色
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        tonalElevation = 2.dp,
+        shadowElevation = 2.dp // 加一点阴影，防止图片太白导致标签看不清
     ) {
         Text(
             text = "BEST",
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            fontWeight = FontWeight.Bold
+            // 移除原本的 color 参数，让它自动使用 contentColor
         )
     }
 }
@@ -247,6 +286,135 @@ private fun SkeletonPriceCard() {
     ) {}
 }
 
+@Composable
+private fun BundleCard(bundle: BundleDeal) {
+    val uriHandler = LocalUriHandler.current
+    val expiry = parseExpiry(bundle.expiry)
+    val remaining = remainingLabel(expiry)
+    val urgent = remaining?.contains("h") == true
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = bundle.link.isNotBlank()) {
+                if (bundle.link.isNotBlank()) uriHandler.openUri(bundle.link)
+            },
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f),
+        tonalElevation = if (urgent) 2.dp else 0.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StoreChip(store = bundle.store)
+                if (remaining != null) {
+                    StatusBadge(
+                        text = remaining + if (urgent) " left" else "",
+                        color = if (urgent) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(bundle.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = CurrencyUtils.format(bundle.price, bundle.currency),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            if (bundle.games.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Includes: " + bundle.games.take(3).joinToString { it.title } +
+                            if (bundle.games.size > 3) " +" + (bundle.games.size - 3) else "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Open bundle",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (bundle.link.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.alpha(if (bundle.link.isNotBlank()) 1f else 0.5f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StoreChip(store: String) {
+    val bg = storeColor(store)
+    Surface(
+        color = bg.copy(alpha = 0.18f),
+        shape = RoundedCornerShape(50),
+        tonalElevation = 0.dp
+    ) {
+        Text(
+            text = store,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = bg
+        )
+    }
+}
+
+@Composable
+private fun StatusBadge(text: String, color: Color) {
+    Surface(
+        color = color.copy(alpha = 0.25f),
+        shape = RoundedCornerShape(50),
+        tonalElevation = 0.dp
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = color.darken(0.25f)
+        )
+    }
+}
+
+@Composable
+private fun storeColor(store: String): Color = when {
+    store.contains("Steam", true) -> Color(0xFF1B6FBC)
+    store.contains("Epic", true) -> Color(0xFF9146FF)
+    store.contains("GOG", true) -> Color(0xFF673AB7)
+    store.contains("Humble", true) -> Color(0xFFE9642E)
+    store.contains("Ubisoft", true) -> Color(0xFF2E82D8)
+    else -> MaterialTheme.colorScheme.primary
+}
+
+private fun Color.darken(factor: Float): Color {
+    val r = (red * (1 - factor)).coerceIn(0f, 1f)
+    val g = (green * (1 - factor)).coerceIn(0f, 1f)
+    val b = (blue * (1 - factor)).coerceIn(0f, 1f)
+    return Color(r, g, b, alpha)
+}
+
+private fun parseExpiry(raw: String?): Long? = runCatching {
+    java.time.Instant.parse(raw).toEpochMilli()
+}.getOrNull()
+
+private fun remainingLabel(expiryMillis: Long?): String? {
+    expiryMillis ?: return null
+    val diff = expiryMillis - System.currentTimeMillis()
+    if (diff <= 0) return null
+    val minutes = diff / 60000
+    val hours = minutes / 60
+    val days = hours / 24
+    return when {
+        days >= 1 -> "${days}d"
+        hours >= 1 -> "${hours}h"
+        else -> "${minutes}m"
+    }
+}
+
 // 扩展函数：获取最小价（用于标记最佳）
 private fun CompareUiState.resultsMinPrice(): Double? = results.minByOrNull { it.currentPrice }?.currentPrice
 
@@ -254,6 +422,8 @@ data class CompareUiState(
     val query: String = "",
     val isLoading: Boolean = false,
     val results: List<Offer> = emptyList(),
+    val bundles: List<BundleDeal> = emptyList(),
+    val watchlistedIds: Set<String> = emptySet(),
     val errorMessage: String? = null,
     val sortAscending: Boolean = true
 )
@@ -269,6 +439,16 @@ class CompareViewModel @Inject constructor(
     val uiState: StateFlow<CompareUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            watchlistRepository.watchlistFlow().collect { list ->
+                _uiState.value = _uiState.value.copy(
+                    watchlistedIds = list.map { it.gameId }.toSet()
+                )
+            }
+        }
+    }
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(query = query)
@@ -295,41 +475,54 @@ class CompareViewModel @Inject constructor(
         searchJob = viewModelScope.launch {
             if (!immediate) delay(300)
             if (query.isBlank()) {
-                _uiState.value = _uiState.value.copy(results = emptyList(), isLoading = false)
+                _uiState.value = _uiState.value.copy(
+                    results = emptyList(),
+                    bundles = emptyList(),
+                    isLoading = false
+                )
                 return@launch
             }
 
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            runCatching { repository.comparePrices(query) }
-                .onSuccess { offers ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        results = sortOffers(offers, _uiState.value.sortAscending)
-                    )
-                }
-                .onFailure { throwable ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = throwable.message ?: "Unable to compare prices"
-                    )
-                }
+            runCatching {
+                val offers = repository.comparePrices(query)
+                val bundles = repository.searchBundles(query)
+                offers to bundles
+            }.onSuccess { (offers, bundles) ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    results = sortOffers(offers, _uiState.value.sortAscending),
+                    bundles = bundles
+                )
+            }.onFailure { throwable ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    results = emptyList(),
+                    bundles = emptyList(),
+                    errorMessage = throwable.message ?: "Unable to compare prices"
+                )
+            }
         }
     }
 
 
-    fun addToWatchlist(offer: Offer) {
+    fun toggleWatchlist(offer: Offer) {
         viewModelScope.launch {
-            val entry = WatchlistEntity(
-                gameId = offer.id,
-                title = offer.gameTitle,
-                imageUrl = offer.imageUrl,
-                url = offer.url,
-                lastKnownPrice = offer.currentPrice,
-                currency = offer.currencyCode,
-                preferredStores = listOf(offer.store)
-            )
-
-            watchlistRepository.addOrUpdate(entry)
+            val exists = _uiState.value.watchlistedIds.contains(offer.id)
+            if (exists) {
+                watchlistRepository.remove(offer.id)
+            } else {
+                val entry = WatchlistEntity(
+                    gameId = offer.id,
+                    title = offer.gameTitle,
+                    imageUrl = offer.imageUrl,
+                    url = offer.url,
+                    lastKnownPrice = offer.currentPrice,
+                    currency = offer.currencyCode,
+                    preferredStores = listOf(offer.store)
+                )
+                watchlistRepository.addOrUpdate(entry)
+            }
         }
     }
 

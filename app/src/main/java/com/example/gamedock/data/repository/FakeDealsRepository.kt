@@ -1,6 +1,7 @@
 package com.example.gamedock.data.repository
 
-import com.example.gamedock.data.model.BundleInfo
+import com.example.gamedock.data.model.BundleDeal
+import com.example.gamedock.data.model.BundleGame
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Offer
 import kotlinx.coroutines.delay
@@ -80,7 +81,28 @@ class FakeDealsRepository : DealsRepository {
         }
     }
 
-    override suspend fun searchBundles(query: String): List<BundleInfo> {
-        return emptyList()
+    override suspend fun searchBundles(query: String): List<BundleDeal> {
+        delay(150)
+        if (query.isBlank()) return emptyList()
+        return listOf(
+            BundleDeal(
+                id = 1,
+                title = "Sample Charity Pack",
+                store = "Humble",
+                price = 12.0,
+                currency = "USD",
+                expiry = null,
+                link = "https://www.humblebundle.com/",
+                imageUrl = null,
+                games = listOf(
+                    BundleGame("Indie Gem 1", null),
+                    BundleGame("Indie Gem 2", null)
+                )
+            )
+        )
+    }
+
+    override suspend fun getBundlesFeed(): List<BundleDeal> {
+        return searchBundles("sample")
     }
 }

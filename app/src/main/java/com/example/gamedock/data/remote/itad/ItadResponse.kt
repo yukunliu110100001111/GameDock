@@ -30,7 +30,8 @@ data class ItadAssets(
 // ------------------- Price Overview ------------------
 
 data class GamePriceResponse(
-    val prices: List<GamePriceInfo>
+    val prices: List<GamePriceInfo>,
+    val bundles: List<BundleDetail>? = emptyList()
 )
 
 data class GamePriceInfo(

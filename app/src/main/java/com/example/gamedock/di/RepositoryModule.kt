@@ -10,6 +10,8 @@ import com.example.gamedock.data.repository.EpicAuthRepository
 import com.example.gamedock.data.repository.EpicAuthRepositoryImpl
 import com.example.gamedock.data.repository.WatchlistRepository
 import com.example.gamedock.data.repository.WatchlistRepositoryImpl
+import com.example.gamedock.data.repository.SettingsRepository
+import com.example.gamedock.data.repository.SettingsRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -50,4 +52,9 @@ abstract class RepositoryModule {
         impl: WatchlistRepositoryImpl
     ): WatchlistRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(
+        impl: SettingsRepositoryImpl
+    ): SettingsRepository
 }

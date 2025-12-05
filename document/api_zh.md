@@ -527,7 +527,7 @@ Code (text):
     PricePoint:
       store, date, price, currency, isHistoricalLow
 
-    BundleInfo:
+    BundleDeal:
       id, name, source, url, thumbnail, minPrice, currency,
       endsAt, includedGames[]
 

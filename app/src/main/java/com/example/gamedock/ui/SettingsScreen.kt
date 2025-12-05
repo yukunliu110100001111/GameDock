@@ -17,11 +17,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import com.example.gamedock.data.repository.SettingsRepository
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
@@ -65,13 +68,24 @@ data class SettingsUiState(
 )
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor() : ViewModel() {
+class SettingsViewModel @Inject constructor(
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            settingsRepository.notificationsEnabled.collect { enabled ->
+                _uiState.value = _uiState.value.copy(notificationsEnabled = enabled)
+            }
+        }
+    }
+
     fun toggleNotifications() {
-        _uiState.value = _uiState.value.copy(
-            notificationsEnabled = !_uiState.value.notificationsEnabled
-        )
+        viewModelScope.launch {
+            val next = !_uiState.value.notificationsEnabled
+            settingsRepository.setNotificationsEnabled(next)
+        }
     }
 }

@@ -15,7 +15,6 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
     data object Freebies : Screen("freebies", "Freebies", Icons.Filled.CardGiftcard)
     data object Compare : Screen("compare", "Compare", Icons.Filled.AttachMoney)
     data object Watchlist : Screen("watchlist", "Watchlist", Icons.Filled.Star)
-    data object Bundles : Screen("bundles", "Bundles", Icons.Filled.Inventory2)
     data object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
     data object AddAccount : Screen("add_account", "Add Account", Icons.Filled.Home)
 
@@ -24,6 +23,6 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector)
 
     data object AccountDetail : Screen("account_detail", "Account Detail", Icons.Filled.Home)
     companion object {
-        val bottomNavItems = listOf(Home, Freebies, Compare, Watchlist, Bundles, Settings)
+        val bottomNavItems = listOf(Home, Freebies, Compare, Watchlist, Settings)
     }
 }

@@ -3,11 +3,14 @@ package com.example.gamedock.data.remote.itad
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import com.example.gamedock.data.model.BundleInfo
+import com.example.gamedock.data.model.BundleDeal
+import com.example.gamedock.data.model.BundleGame
 import com.example.gamedock.data.model.Offer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.time.Instant
+import java.time.format.DateTimeParseException
 
 @Singleton
 class ItadAdapter @Inject constructor(
@@ -141,7 +144,7 @@ class ItadAdapter @Inject constructor(
     /**
      * Searches for bundles containing the specified game.
      */
-    suspend fun searchBundles(gameQuery: String): List<BundleInfo> {
+    suspend fun searchBundles(gameQuery: String): List<BundleDeal> {
         try {
             val searchResults = itadApiService.searchGame(
                 apiKey = ITAD_API_KEY,
@@ -149,27 +152,45 @@ class ItadAdapter @Inject constructor(
                 resultCount = 1
             )
             val gameId = searchResults.firstOrNull()?.id ?: return emptyList()
+            val gameTitle = searchResults.first().title
 
-            val bundlesResponse = itadApiService.getGameBundles(
+            val overview = itadApiService.getGamePriceOverview(
                 apiKey = ITAD_API_KEY,
-                gameId = gameId,
-                country = resolveCountryCode()
+                country = resolveCountryCode(),
+                gameIds = listOf(gameId)
             )
 
-            return bundlesResponse.map { bundle ->
+            val bundlesResponse = overview.bundles ?: return emptyList()
+
+            return bundlesResponse
+                .filter { isActiveBundle(it.expiry) }
+                .map { bundle ->
                 val firstTier = bundle.tiers.firstOrNull()
                 val priceAmount = firstTier?.price?.amount ?: 0.0
                 val priceCurrency = firstTier?.price?.currency ?: "USD"
                 val coverImage = firstTier?.games?.firstOrNull()?.assets?.banner600
                     ?: firstTier?.games?.firstOrNull()?.assets?.boxart
-                BundleInfo(
+
+                val games = bundle.tiers
+                    .flatMap { it.games }
+                    .distinctBy { it.title }
+                    .map { game ->
+                        BundleGame(
+                            title = game.title,
+                            imageUrl = game.assets?.banner145 ?: game.assets?.boxart
+                        )
+                    }
+
+                BundleDeal(
+                    id = bundle.id,
                     title = bundle.title,
                     store = bundle.page.name,
                     price = priceAmount,
                     currency = priceCurrency,
                     expiry = bundle.expiry,
                     link = bundle.url,
-                    imageUrl = coverImage
+                    imageUrl = coverImage,
+                    games = games
                 )
             }
         } catch (e: Exception) {
@@ -177,4 +198,87 @@ class ItadAdapter @Inject constructor(
             return emptyList()
         }
     }
+
+    /**
+     * Default feed: query a small set of popular games, then merge their overview bundles.
+     */
+    suspend fun getBundlesFeed(): List<BundleDeal> {
+        val seedTitles = listOf(
+            "cyberpunk 2077",
+            "elden ring",
+            "god of war",
+            "rimworld",
+            "hollow knight",
+            "resident evil 4"
+        )
+
+        val gameIds = mutableListOf<String>()
+        for (title in seedTitles) {
+            val id = runCatching {
+                itadApiService.searchGame(
+                    apiKey = ITAD_API_KEY,
+                    title = title,
+                    resultCount = 1
+                ).firstOrNull()?.id
+            }.getOrNull()
+            if (id != null) gameIds.add(id)
+        }
+
+        if (gameIds.isEmpty()) return emptyList()
+
+        val overview = runCatching {
+            itadApiService.getGamePriceOverview(
+                apiKey = ITAD_API_KEY,
+                country = resolveCountryCode(),
+                gameIds = gameIds
+            )
+        }.getOrElse { return emptyList() }
+
+        val bundles = overview.bundles?.filter { isActiveBundle(it.expiry) } ?: return emptyList()
+
+        return bundles.map { bundle ->
+            val firstTier = bundle.tiers.firstOrNull()
+            val priceAmount = firstTier?.price?.amount ?: 0.0
+            val priceCurrency = firstTier?.price?.currency ?: "USD"
+            val coverImage = firstTier?.games?.firstOrNull()?.assets?.banner600
+                ?: firstTier?.games?.firstOrNull()?.assets?.boxart
+
+            val games = bundle.tiers
+                .flatMap { it.games }
+                .distinctBy { it.title }
+                .map { game ->
+                    BundleGame(
+                        title = game.title,
+                        imageUrl = game.assets?.banner145 ?: game.assets?.boxart
+                    )
+                }
+
+            BundleDeal(
+                id = bundle.id,
+                title = bundle.title,
+                store = bundle.page.name,
+                price = priceAmount,
+                currency = priceCurrency,
+                expiry = bundle.expiry,
+                link = bundle.url,
+                imageUrl = coverImage,
+                games = games
+            )
+        }
+    }
+
+    private fun isActiveBundle(expiry: String?): Boolean {
+        val end = parseExpiryMillis(expiry)
+        return end == null || end > System.currentTimeMillis()
+    }
+
+    private fun parseExpiryMillis(raw: String?): Long? {
+        if (raw.isNullOrBlank()) return null
+        return try {
+            Instant.parse(raw).toEpochMilli()
+        } catch (_: DateTimeParseException) {
+            null
+        }
+    }
+
 }

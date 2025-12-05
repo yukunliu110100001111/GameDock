@@ -47,9 +47,6 @@ fun NavGraph(
                 }
             )
         }
-        composable(Screen.Bundles.route) {
-            BundlesScreen()
-        }
         composable(Screen.Settings.route) {
             SettingsScreen()
         }

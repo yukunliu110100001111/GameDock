@@ -1,198 +1,205 @@
 package com.example.gamedock.ui.components
 
-import coil.compose.AsyncImage
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.gamedock.data.model.Offer
 import com.example.gamedock.data.util.CurrencyUtils
 
 @Composable
-fun PriceCard(offer: Offer, onOpenStore: (Offer) -> Unit = {}, onAddWatchlist: (Offer)  -> Unit = {}) {
+fun PriceCard(
+    offer: Offer,
+    isWatchlisted: Boolean = false,
+    onOpenStore: (Offer) -> Unit = {},
+    onToggleWatchlist: (Offer) -> Unit = {}
+) {
     val uriHandler = LocalUriHandler.current
-    val diffPercent: Double? = if (offer.lowestPrice > 0 && offer.currentPrice > offer.lowestPrice) {
-        ((offer.currentPrice - offer.lowestPrice) / offer.lowestPrice) * 100
-    } else null
-    val atLowest = offer.currentPrice == offer.lowestPrice
+    val isLowest = offer.currentPrice <= offer.lowestPrice && offer.lowestPrice > 0
+    
+    // 爱心颜色动画
+    val heartColor by animateColorAsState(
+        targetValue = if (isWatchlisted) Color(0xFFFF4D4D) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
+        animationSpec = tween(300),
+        label = "HeartTint"
+    )
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        shape = RoundedCornerShape(14.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .height(105.dp), // 【关键修改】固定高度，强制变扁
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 封面图
+        Row(modifier = Modifier.fillMaxSize()) {
+            // --- 1. 左侧图片区 (变宽了) ---
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .width(120.dp) // 【关键修改】宽度增加，能看到更多画面
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (!offer.imageUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = offer.imageUrl,
                         contentDescription = offer.gameTitle,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop // 裁剪填满，看起来更有质感
                     )
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color(0xFFE0E0E0)),
-                        contentAlignment = Alignment.Center
-                    ) { Text("No Img", style = MaterialTheme.typography.bodySmall) }
-                }
-            }
-
-            // 右侧信息
-            Column(modifier = Modifier.weight(1f)) {
-                // Store + 当前价 行
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    StoreChip(store = offer.store)
-                    Text(
-                        text = CurrencyUtils.format(offer.currentPrice, offer.currencyCode),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-                // 游戏标题弱化显示
-                Text(
-                    text = offer.gameTitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontStyle = FontStyle.Italic,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                // 最低价与状态
-                Row(
-                    modifier = Modifier.padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Lowest: ${CurrencyUtils.format(offer.lowestPrice, offer.currencyCode)}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    when {
-                        atLowest -> {
-                            StatusBadge(text = "At Lowest", color = MaterialTheme.colorScheme.tertiaryContainer)
-                        }
-                        diffPercent != null -> {
-                            StatusBadge(text = "+${"%.0f".format(diffPercent)}%", color = MaterialTheme.colorScheme.errorContainer)
-                        }
-                        offer.currentPrice < offer.lowestPrice -> {
-                            StatusBadge(text = "Below Low", color = MaterialTheme.colorScheme.inversePrimary)
-                        }
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No Img", style = MaterialTheme.typography.labelSmall)
                     }
                 }
             }
 
-            // 按钮区
-            Column(horizontalAlignment = Alignment.End) {
-                TextButton(
-                    onClick = {
-                        onOpenStore(offer)
-                        offer.url?.let { uriHandler.openUri(it) }
-                    },
-                    enabled = offer.url != null
+            // --- 2. 右侧内容容器 ---
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .padding(10.dp) // 内部边距
+            ) {
+                // 中间：文本信息
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(if (offer.url != null) "Store" else "No Link")
+                    Column {
+                        // 商店标签
+                        StoreChip(store = offer.store)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        // 标题
+                        Text(
+                            text = offer.gameTitle,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 18.sp
+                        )
+                    }
+                    
+                    // 底部小字
+                    if (isLowest) {
+                        Text(
+                            text = "History Low",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF2E7D32),
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else if (offer.lowestPrice > 0) {
+                        Text(
+                            text = "Low: ${CurrencyUtils.format(offer.lowestPrice, offer.currencyCode)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
-                TextButton(
-                    onClick = { onAddWatchlist(offer) }
+                // 右边：价格与操作按钮
+                Column(
+                    modifier = Modifier.fillMaxHeight(),
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Watchlist")
-                }
+                    // 价格
+                    Text(
+                        text = CurrencyUtils.format(offer.currentPrice, offer.currencyCode),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
+                    // 底部操作区：爱心 + 跳转 (并排防拥挤)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // 爱心按钮
+                        IconButton(
+                            onClick = { onToggleWatchlist(offer) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isWatchlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Watchlist",
+                                tint = heartColor,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        // 跳转按钮 (做成小圆角矩形)
+                        Surface(
+                            onClick = {
+                                onOpenStore(offer)
+                                offer.url?.let { uriHandler.openUri(it) }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.OpenInNew,
+                                contentDescription = "Store",
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
+// 辅助组件：商店标签 (微调得更小一点)
 @Composable
 private fun StoreChip(store: String) {
     val bg = storeColor(store)
     Surface(
-        color = bg.copy(alpha = 0.18f),
-        shape = RoundedCornerShape(50),
-        tonalElevation = 0.dp
+        color = bg.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(4.dp),
     ) {
         Text(
-            text = store,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = bg
+            text = store.uppercase(),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+            fontWeight = FontWeight.Bold,
+            color = bg.darken(0.1f)
         )
     }
 }
 
-@Composable
-private fun StatusBadge(text: String, color: Color) {
-    Surface(
-        color = color.copy(alpha = 0.22f),
-        shape = RoundedCornerShape(50),
-        tonalElevation = 0.dp
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
-            color = color.darken(0.25f)
-        )
-    }
-}
-
+// 颜色逻辑 (保持不变)
 @Composable
 private fun storeColor(store: String): Color {
     return when {
         store.contains("Steam", true) -> Color(0xFF1B6FBC)
-        store.contains("Epic", true) -> Color(0xFF9146FF)
+        store.contains("Epic", true) -> Color(0xFF333333)
         store.contains("GOG", true) -> Color(0xFF673AB7)
-        store.contains("Ubisoft", true) -> Color(0xFF2E82D8)
+        store.contains("Ubisoft", true) -> Color(0xFF0059C4)
         store.contains("Humble", true) -> Color(0xFFE9642E)
         else -> MaterialTheme.colorScheme.primary
     }
@@ -207,16 +214,16 @@ private fun Color.darken(factor: Float): Color {
 
 @Preview
 @Composable
-fun PriceCardPreview() {
+fun PriceCardFlatPreview() {
     val sampleOffer = Offer(
         id = "offer-steam",
-        gameTitle = "Cyberpunk 2077",
+        gameTitle = "Cyberpunk 2077: Phantom Liberty",
         store = "Steam",
-        currentPrice = 19.99,
-        lowestPrice = 9.99,
+        currentPrice = 29.99,
+        lowestPrice = 19.99,
         currencyCode = "USD",
-        url = "https://store.steampowered.com/app/1091500/Cyberpunk_2077/",
-        imageUrl = "https://via.placeholder.com/300x200.png?text=Cyberpunk"
+        url = "https://store.steampowered.com",
+        imageUrl = "https://via.placeholder.com/300x400"
     )
-    PriceCard(offer = sampleOffer)
+    PriceCard(offer = sampleOffer, isWatchlisted = true)
 }

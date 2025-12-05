@@ -1,8 +1,9 @@
 package com.example.gamedock.data.repository
 
-import com.example.gamedock.data.model.BundleInfo
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Offer
+import com.example.gamedock.data.model.BundleDeal
+import com.example.gamedock.data.local.FreebiesCache
 import com.example.gamedock.data.remote.epic.EpicStoreAdapter
 import com.example.gamedock.data.remote.gamerpower.GamerPowerStoreAdapter
 import com.example.gamedock.data.remote.itad.ItadAdapter
@@ -13,16 +14,24 @@ import javax.inject.Singleton
 class DealsRepositoryImpl @Inject constructor(
     private val epicStoreAdapter: EpicStoreAdapter,
     private val itadAdapter: ItadAdapter,
-    private val gamerPowerStoreAdapter: GamerPowerStoreAdapter
+    private val gamerPowerStoreAdapter: GamerPowerStoreAdapter,
+    private val freebiesCache: FreebiesCache
 ) : DealsRepository {
 
     /**
      * Fetches a list of freebies from the Epic Store.
      */
     override suspend fun getFreebies(): List<Freebie> {
-        val epic = epicStoreAdapter.fetchFreebies()
-        val other = gamerPowerStoreAdapter.fetchFreebies()
-        return epic + other
+        val cached = freebiesCache.load()
+
+        val network = runCatching {
+            val epic = epicStoreAdapter.fetchFreebies()
+            val other = gamerPowerStoreAdapter.fetchFreebies()
+            epic + other
+        }
+
+        return network.onSuccess { freebiesCache.save(it) }
+            .getOrElse { cached }
     }
 
 
@@ -30,7 +39,11 @@ class DealsRepositoryImpl @Inject constructor(
         return itadAdapter.comparePrices(query)
     }
 
-    override suspend fun searchBundles(query: String): List<BundleInfo> {
+    override suspend fun searchBundles(query: String): List<BundleDeal> {
         return itadAdapter.searchBundles(query)
+    }
+
+    override suspend fun getBundlesFeed(): List<BundleDeal> {
+        return itadAdapter.getBundlesFeed()
     }
 }
