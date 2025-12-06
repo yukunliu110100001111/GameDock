@@ -21,10 +21,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.gamedock.data.model.account.PlatformAccount
 import com.example.gamedock.data.model.PlatformType
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun AccountCard(
@@ -49,13 +52,18 @@ fun AccountCard(
 
             Row {
 
+                val name = stripCdata(account.nickname).ifBlank { account.platformName() }
+                val avatarUrl = account.avatar.takeIf { it.isNotBlank() }
+                    ?: buildFallbackAvatar(name)
+
                 // Avatar
                 Image(
-                    painter = rememberAsyncImagePainter(account.avatar),
+                    painter = rememberAsyncImagePainter(avatarUrl),
                     contentDescription = null,
                     modifier = Modifier
                         .size(56.dp)
-                        .clip(CircleShape)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
                 )
 
                 Spacer(Modifier.width(16.dp))
@@ -64,7 +72,7 @@ fun AccountCard(
 
                     // Display name
                     Text(
-                        account.nickname,
+                        name,
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -89,4 +97,23 @@ fun AccountCard(
             }
         }
     }
+}
+
+private fun stripCdata(text: String?): String {
+    if (text.isNullOrBlank()) return ""
+    return text.replace("<!\\[CDATA\\[".toRegex(), "")
+        .replace("]]>", "")
+        .trim()
+}
+
+private fun PlatformAccount.platformName(): String {
+    return when (platform) {
+        PlatformType.Steam -> "Steam User"
+        PlatformType.Epic -> "Epic User"
+    }
+}
+
+private fun buildFallbackAvatar(name: String): String {
+    val safe = URLEncoder.encode(name.ifBlank { "Player" }, StandardCharsets.UTF_8.toString())
+    return "https://ui-avatars.com/api/?name=$safe&background=4F46E5&color=fff&bold=true"
 }

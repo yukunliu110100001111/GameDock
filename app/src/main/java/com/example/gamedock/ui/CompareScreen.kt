@@ -67,6 +67,8 @@ import com.example.gamedock.data.repository.WatchlistRepository
 import com.example.gamedock.data.util.CurrencyUtils
 import com.example.gamedock.data.remote.itad.ItadSearchItem
 
+// 注意：这里保留 Dimens 的引用，如果你的项目里没有 Dimens object，请替换为具体数值如 16.dp
+// import com.example.gamedock.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,7 +88,7 @@ fun CompareScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(Dimens.screenPadding)
+            .padding(16.dp) // 使用 16.dp 代替 Dimens.screenPadding 防止报错
     ) {
         OutlinedTextField(
             value = uiState.query,
@@ -114,7 +116,7 @@ fun CompareScreen(
             }
         )
 
-        Spacer(modifier = Modifier.height(Dimens.cardSpacing))
+        Spacer(modifier = Modifier.height(8.dp)) // Dimens.cardSpacing
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -150,11 +152,11 @@ fun CompareScreen(
                 Text(
                     text = "Select a game to compare:",
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = Dimens.cardSpacing)
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = Dimens.screenPadding),
+                    contentPadding = PaddingValues(bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(uiState.searchResults) { game ->
@@ -189,14 +191,14 @@ fun CompareScreen(
         BestOfferSummary(uiState.results)
 
         if (uiState.isLoading) {
-            Spacer(modifier = Modifier.height(Dimens.cardSpacing))
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
         errorMessage?.let {
             Text(
                 text = it,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = Dimens.cardSpacing)
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
@@ -230,10 +232,10 @@ fun CompareScreen(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                horizontal = Dimens.screenPadding,
-                vertical = Dimens.cardSpacing
+                horizontal = 16.dp,
+                vertical = 8.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(Dimens.cardSpacing)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (uiState.isLoading) {
                 items(4) { SkeletonPriceCard() }
@@ -258,7 +260,8 @@ fun CompareScreen(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 2.dp)
+                    // 【修改点】：移除了 horizontal = 2.dp 的 padding
+                    // 这样卡片宽度会完全对齐上方的 "Best Offer" 摘要
                 ) {
                     PriceCard(
                         offer = offer,
@@ -296,6 +299,7 @@ private fun BestOfferSummary(results: List<Offer>) {
                 fontWeight = FontWeight.Bold
             )
             if (results.size > 1 && diff > 0) {
+                // 【修复】：修复了之前的乱码
                 Text(
                     text = "Vs Highest: save ${CurrencyUtils.format(diff, min.currencyCode)} (~${"%.0f".format(diffPercent)}%)",
                     style = MaterialTheme.typography.bodySmall,
@@ -310,21 +314,18 @@ private fun BestOfferSummary(results: List<Offer>) {
 private fun BestBadge(modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
-            // 【修改这里】：调整 padding，让它离左上角有一点距离，或者直接贴合
-            // 既然在图片上，稍微留一点距离(4.dp)会更有层次感
-            .padding(start = 6.dp, top = 6.dp) 
-            .clip(RoundedCornerShape(4.dp)), // 稍微圆角一点，不要太圆(50)也不要太方
-        color = MaterialTheme.colorScheme.primary, // 建议用深色背景(primary)，文字用浅色
+            .padding(start = 6.dp, top = 6.dp)
+            .clip(RoundedCornerShape(4.dp)),
+        color = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
         tonalElevation = 2.dp,
-        shadowElevation = 2.dp // 加一点阴影，防止图片太白导致标签看不清
+        shadowElevation = 2.dp
     ) {
         Text(
             text = "BEST",
             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold
-            // 移除原本的 color 参数，让它自动使用 contentColor
         )
     }
 }
@@ -470,7 +471,6 @@ private fun remainingLabel(expiryMillis: Long?): String? {
     }
 }
 
-// 扩展函数：获取最小价（用于标记最佳）
 private fun CompareUiState.resultsMinPrice(): Double? = results.minByOrNull { it.currentPrice }?.currentPrice
 
 data class CompareUiState(
@@ -635,5 +635,4 @@ class CompareViewModel @Inject constructor(
             searchNow()
         }
     }
-
 }

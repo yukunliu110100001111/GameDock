@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -18,7 +20,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -59,6 +63,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.gamedock.R
 import com.example.gamedock.data.model.PlatformType
+import com.example.gamedock.data.model.account.PlatformAccount
 import com.example.gamedock.data.repository.AccountsRepository
 import com.example.gamedock.ui.home.AccountWebViewActivity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -74,6 +79,7 @@ fun FreebiesScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current   // ★ 新增
+    var accountPicker by remember { mutableStateOf<AccountPickerData?>(null) }
 
     // 监听 Claim 事件
     LaunchedEffect(Unit) {
@@ -96,6 +102,14 @@ fun FreebiesScreen(
                 is ClaimUiEvent.ExternalBrowser -> {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(event.url))
                     context.startActivity(intent)
+                }
+
+                is ClaimUiEvent.SelectAccount -> {
+                    accountPicker = AccountPickerData(
+                        platform = event.platform,
+                        accounts = event.accounts,
+                        url = event.url
+                    )
                 }
             }
         }
@@ -175,6 +189,17 @@ fun FreebiesScreen(
                 Text("Refresh")
             }
         }
+    }
+
+    accountPicker?.let { data ->
+        AccountSelectDialog(
+            data = data,
+            onDismiss = { accountPicker = null },
+            onSelect = { accountId ->
+                viewModel.onAccountChosen(accountId, data.platform, data.url)
+                accountPicker = null
+            }
+        )
     }
 }
 
@@ -328,12 +353,35 @@ class FreebiesViewModel @Inject constructor(
                 return@launch
             }
 
+            if (accounts.size > 1) {
+                _claimEvent.emit(
+                    ClaimUiEvent.SelectAccount(
+                        platform = platform,
+                        accounts = accounts,
+                        url = freebie.claimUrl ?: return@launch
+                    )
+                )
+                return@launch
+            }
+
             val account = accounts.first()
 
             _claimEvent.emit(
                 ClaimUiEvent.OpenWebView(
                     accountId = account.id,
                     url = freebie.claimUrl ?: return@launch,
+                    platform = platform
+                )
+            )
+        }
+    }
+
+    fun onAccountChosen(accountId: String, platform: PlatformType, url: String) {
+        viewModelScope.launch {
+            _claimEvent.emit(
+                ClaimUiEvent.OpenWebView(
+                    accountId = accountId,
+                    url = url,
                     platform = platform
                 )
             )
@@ -386,6 +434,60 @@ class FreebiesViewModel @Inject constructor(
                 }
         }
     }
+}
+
+private data class AccountPickerData(
+    val platform: PlatformType,
+    val accounts: List<PlatformAccount>,
+    val url: String
+)
+
+@Composable
+private fun AccountSelectDialog(
+    data: AccountPickerData,
+    onDismiss: () -> Unit,
+    onSelect: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择 ${data.platform.name} 账号") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                data.accounts.forEach { account ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(account.id) }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = account.avatar,
+                            contentDescription = null,
+                            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                            error = painterResource(id = R.drawable.ic_launcher_foreground),
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(account.nickname.ifBlank { account.id })
+                            Text(
+                                text = "${account.platform} · ID: ${account.id}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("取消") }
+        }
+    )
 }
 
 class CustomClaimActivity : AccountWebViewActivity() {

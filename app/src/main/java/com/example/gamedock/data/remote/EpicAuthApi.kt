@@ -1,6 +1,7 @@
 // com/example/gamedock/data/remote/EpicAuthApi.kt
 package com.example.gamedock.data.remote
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
@@ -8,10 +9,16 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Credentials
 import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 
 object EpicAuthApi {
 
-    private val client = OkHttpClient()
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .writeTimeout(20, TimeUnit.SECONDS)
+        .callTimeout(30, TimeUnit.SECONDS)
+        .build()
 
     /**
      * Step 1 — Exchange authorization_code for tokens.
@@ -44,7 +51,7 @@ object EpicAuthApi {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .build()
 
-            runCatching {
+            runWithRetry(tag = "EPIC_AUTH") {
                 client.newCall(request).execute().use { resp ->
                     val raw = resp.body?.string() ?: "null"
 
@@ -55,7 +62,7 @@ object EpicAuthApi {
 
                     JSONObject(raw)
                 }
-            }.getOrNull()
+            }
         }
 
     /**
@@ -84,7 +91,7 @@ object EpicAuthApi {
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .build()
 
-            runCatching {
+            runWithRetry(tag = "EPIC_REFRESH") {
                 client.newCall(request).execute().use { resp ->
                     val raw = resp.body?.string() ?: "null"
 
@@ -95,7 +102,7 @@ object EpicAuthApi {
 
                     JSONObject(raw)
                 }
-            }.getOrNull()
+            }
         }
 
     /**
@@ -110,7 +117,7 @@ object EpicAuthApi {
                 .header("Authorization", "bearer $accessToken")
                 .build()
 
-            runCatching {
+            runWithRetry(tag = "EPIC_VERIFY") {
                 client.newCall(request).execute().use { resp ->
                     val raw = resp.body?.string() ?: "null"
 
@@ -121,6 +128,21 @@ object EpicAuthApi {
 
                     JSONObject(raw)
                 }
-            }.getOrNull()
+            }
         }
+
+    private inline fun <T> runWithRetry(
+        tag: String,
+        maxAttempts: Int = 2,
+        block: () -> T?
+    ): T? {
+        var lastError: Throwable? = null
+        repeat(maxAttempts) { attempt ->
+            runCatching { return block() }
+                .onFailure { lastError = it }
+            Log.w(tag, "attempt ${attempt + 1} failed: ${lastError?.message}")
+        }
+        lastError?.let { Log.e(tag, "all attempts failed", it) }
+        return null
+    }
 }

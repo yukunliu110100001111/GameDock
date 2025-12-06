@@ -17,7 +17,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.notifications.PriceDropNotifier
-import com.example.gamedock.worker.PriceCheckWorker
+import com.example.gamedock.workers.PriceCheckWorker
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import java.util.concurrent.TimeUnit

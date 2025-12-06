@@ -1,4 +1,4 @@
-package com.example.gamedock.worker
+package com.example.gamedock.workers
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker

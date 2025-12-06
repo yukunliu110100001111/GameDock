@@ -23,10 +23,13 @@ class HomeViewModel @Inject constructor(
 
     private val _accounts = MutableStateFlow<List<PlatformAccount>>(emptyList())
     val accounts: StateFlow<List<PlatformAccount>> = _accounts
+    private var hasLoadedOnce = false
 
     fun loadAllAccounts() {
         viewModelScope.launch {
+            if (hasLoadedOnce && _accounts.value.isNotEmpty()) return@launch
             _accounts.value = accountsRepository.loadAllAccounts()
+            hasLoadedOnce = true
         }
     }
 

@@ -6,8 +6,10 @@ import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.RenderProcessGoneDetail
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.gamedock.data.model.PlatformType
@@ -32,6 +34,8 @@ abstract class AccountWebViewActivity : ComponentActivity() {
 
     private lateinit var webView: WebView
     private var headers: Map<String, String> = emptyMap()
+    private var targetUrl: String = ""
+    private var renderRestartAttempts = 0
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +48,18 @@ abstract class AccountWebViewActivity : ComponentActivity() {
             )
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
-            webViewClient = object : WebViewClient() {}
+            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            webViewClient = object : WebViewClient() {
+                override fun onRenderProcessGone(
+                    view: WebView?,
+                    detail: RenderProcessGoneDetail?
+                ): Boolean {
+                    // Recover from renderer crash gracefully
+                    recreateWebView()
+                    return true
+                }
+            }
         }
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
@@ -62,6 +77,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
             finish()
             return
         }
+        targetUrl = config.targetUrl
 
         lifecycleScope.launch {
             val credentials = credentialsProvider.getCredentials(config.platform, config.accountId)
@@ -135,6 +151,43 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     private fun sanitizeCookieValue(value: String): String {
         if (value.isEmpty()) return value
         return if (value.contains('%')) value else Uri.encode(value, COOKIE_ALLOWED_CHARS)
+    }
+
+    private fun recreateWebView() {
+        if (!::webView.isInitialized) return
+        renderRestartAttempts += 1
+        if (renderRestartAttempts > 2) {
+            // Avoid infinite restart loop; fall back to finish gracefully.
+            finish()
+            return
+        }
+        val parent = webView.parent as? ViewGroup
+        parent?.removeView(webView)
+        webView.destroy()
+
+        webView = WebView(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            webViewClient = object : WebViewClient() {
+                override fun onRenderProcessGone(
+                    view: WebView?,
+                    detail: RenderProcessGoneDetail?
+                ): Boolean {
+                    recreateWebView()
+                    return true
+                }
+            }
+        }
+        (parent ?: window.decorView as? ViewGroup)?.addView(webView)
+        if (targetUrl.isNotBlank()) {
+            webView.loadUrl(targetUrl, headers)
+        }
     }
 
     companion object {

@@ -12,5 +12,11 @@ sealed class ClaimUiEvent {
         val platform: PlatformType
     ) : ClaimUiEvent()
 
+    data class SelectAccount(
+        val platform: PlatformType,
+        val accounts: List<com.example.gamedock.data.model.account.PlatformAccount>,
+        val url: String
+    ) : ClaimUiEvent()
+
     data class ExternalBrowser(val url: String) : ClaimUiEvent()
 }
