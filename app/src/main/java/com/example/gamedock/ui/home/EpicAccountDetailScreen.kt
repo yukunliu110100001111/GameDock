@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -16,6 +18,7 @@ import com.example.gamedock.data.model.account.EpicAccount
 import com.example.gamedock.ui.Screen
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EpicAccountDetailScreen(
     navController: androidx.navigation.NavController,
@@ -47,71 +50,82 @@ fun EpicAccountDetailScreen(
 
     var status by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Image(
-            painter = rememberAsyncImagePainter(account.avatar),
-            contentDescription = null,
-            modifier = Modifier.size(96.dp)
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(account.nickname, style = MaterialTheme.typography.headlineSmall)
-        Text("Epic ID: ${account.id}", style = MaterialTheme.typography.bodyMedium)
-        Spacer(Modifier.height(16.dp))
-
-        if (status.isNotEmpty()) {
-            Text(status, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(8.dp))
-        }
-
-        // Open Epic profile page
-        Button(
-            onClick = {
-                val intent = Intent(context, EpicProfileActivity::class.java).apply {
-                    putExtra(EpicProfileActivity.EXTRA_ACCOUNT_ID, account.id)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(account.nickname.ifBlank { "Epic Account" }) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
-                context.startActivity(intent)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Open Epic Profile")
+            )
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Refresh token
-        Button(
-            onClick = {
-                scope.launch {
-                    status = "Refreshing token..."
-                    val success = vm.refreshEpicAccount(account)
-                    status = if (success) "Token refreshed." else "Refresh failed, please try again."
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Refresh Epic Token")
-        }
 
-        Spacer(Modifier.height(16.dp))
+            Image(
+                painter = rememberAsyncImagePainter(account.avatar),
+                contentDescription = null,
+                modifier = Modifier.size(96.dp)
+            )
 
-        // Delete account
-        Button(
-            onClick = {
-                vm.deleteAccount(account)
-                navController.popBackStack()
-            },
-            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Delete Account")
+            Spacer(Modifier.height(16.dp))
+
+            Text(account.nickname, style = MaterialTheme.typography.headlineSmall)
+            Text("Epic ID: ${account.id}", style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(16.dp))
+
+            if (status.isNotEmpty()) {
+                Text(status, color = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(8.dp))
+            }
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, EpicProfileActivity::class.java).apply {
+                        putExtra(EpicProfileActivity.EXTRA_ACCOUNT_ID, account.id)
+                    }
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open Epic Profile")
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    scope.launch {
+                        status = "Refreshing token..."
+                        val success = vm.refreshEpicAccount(account)
+                        status = if (success) "Token refreshed." else "Refresh failed, please try again."
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Refresh Epic Token")
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    vm.deleteAccount(account)
+                    navController.popBackStack()
+                },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Delete Account")
+            }
         }
     }
 }

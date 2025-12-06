@@ -36,6 +36,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -47,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.gamedock.data.model.Offer
@@ -66,6 +71,7 @@ import com.example.gamedock.data.local.entity.WatchlistEntity
 import com.example.gamedock.data.repository.WatchlistRepository
 import com.example.gamedock.data.util.CurrencyUtils
 import com.example.gamedock.data.remote.itad.ItadSearchItem
+import com.google.gson.Gson
 
 // 注意：这里保留 Dimens 的引用，如果你的项目里没有 Dimens object，请替换为具体数值如 16.dp
 // import com.example.gamedock.ui.theme.Dimens
@@ -76,13 +82,38 @@ fun CompareScreen(
     queryFromRoute: String,
     viewModel: CompareViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val gsonLocal = remember { Gson() }
+
+    var savedQuery by rememberSaveable { mutableStateOf("") }
+    var savedSelectedJson by rememberSaveable { mutableStateOf<String?>(null) }
+
     LaunchedEffect(queryFromRoute) {
         if (queryFromRoute.isNotBlank()) {
             viewModel.setInitialQuery(queryFromRoute)
         }
     }
 
-    val uiState by viewModel.uiState.collectAsState()
+    // Keep local saveable copies so they survive navigation away/back
+    LaunchedEffect(uiState.query) { savedQuery = uiState.query }
+    LaunchedEffect(uiState.selectedGame) {
+        savedSelectedJson = uiState.selectedGame?.let { gsonLocal.toJson(it) }
+    }
+
+    // Restore when coming back with empty ViewModel state
+    LaunchedEffect(Unit) {
+        if (uiState.query.isBlank() && savedQuery.isNotBlank()) {
+            viewModel.onSearchQueryChange(savedQuery)
+        }
+        if (uiState.selectedGame == null && !savedSelectedJson.isNullOrBlank()) {
+            runCatching {
+                gsonLocal.fromJson(savedSelectedJson, ItadSearchItem::class.java)
+            }.getOrNull()?.let { restored ->
+                viewModel.onSelectGame(restored)
+            }
+        }
+    }
+
     val errorMessage = uiState.errorMessage
 
     Column(
@@ -91,8 +122,11 @@ fun CompareScreen(
             .padding(16.dp) // 使用 16.dp 代替 Dimens.screenPadding 防止报错
     ) {
         OutlinedTextField(
-            value = uiState.query,
-            onValueChange = viewModel::onSearchQueryChange,
+            value = savedQuery,
+            onValueChange = {
+                savedQuery = it
+                viewModel.onSearchQueryChange(it)
+            },
             label = { Text("Search game...") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
@@ -488,16 +522,18 @@ data class CompareUiState(
 @HiltViewModel
 class CompareViewModel @Inject constructor(
     private val repository: DealsRepository,
-    private val watchlistRepository: WatchlistRepository
-
+    private val watchlistRepository: WatchlistRepository,
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CompareUiState())
     val uiState: StateFlow<CompareUiState> = _uiState.asStateFlow()
 
+    private val gson = Gson()
     private var searchJob: Job? = null
 
     init {
+        restoreState()
         viewModelScope.launch {
             watchlistRepository.watchlistFlow().collect { list ->
                 _uiState.value = _uiState.value.copy(
@@ -509,6 +545,7 @@ class CompareViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(query = query)
+        savedStateHandle["compare_query"] = query
         scheduleSearchResults(query)
     }
 
@@ -601,6 +638,7 @@ class CompareViewModel @Inject constructor(
             results = emptyList(),
             bundles = emptyList()
         )
+        savedStateHandle["compare_selected"] = gson.toJson(game)
         fetchOffersFor(game)
     }
 
@@ -632,7 +670,28 @@ class CompareViewModel @Inject constructor(
     fun setInitialQuery(q: String) {
         if (q.isNotBlank() && _uiState.value.query != q) {
             _uiState.value = _uiState.value.copy(query = q)
+            savedStateHandle["compare_query"] = q
             searchNow()
+        }
+    }
+
+    private fun restoreState() {
+        val savedQuery: String? = savedStateHandle["compare_query"]
+        val savedGameJson: String? = savedStateHandle["compare_selected"]
+
+        if (!savedQuery.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(query = savedQuery)
+        }
+
+        val savedGame = runCatching {
+            savedGameJson?.let { gson.fromJson(it, ItadSearchItem::class.java) }
+        }.getOrNull()
+
+        if (savedGame != null) {
+            _uiState.value = _uiState.value.copy(selectedGame = savedGame, isLoading = true)
+            fetchOffersFor(savedGame)
+        } else if (!savedQuery.isNullOrBlank()) {
+            scheduleSearchResults(savedQuery, immediate = true)
         }
     }
 }

@@ -5,6 +5,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.ViewGroup
+import android.view.Gravity
+import android.widget.FrameLayout
+import android.widget.ImageButton
 import android.webkit.CookieManager
 import android.view.View
 import android.webkit.WebView
@@ -33,6 +36,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     @Inject lateinit var credentialsProvider: AccountCredentialsProvider
 
     private lateinit var webView: WebView
+    private lateinit var backButton: ImageButton
     private var headers: Map<String, String> = emptyMap()
     private var targetUrl: String = ""
     private var renderRestartAttempts = 0
@@ -41,32 +45,35 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        webView = WebView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+        val container = FrameLayout(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             )
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-            webViewClient = object : WebViewClient() {
-                override fun onRenderProcessGone(
-                    view: WebView?,
-                    detail: RenderProcessGoneDetail?
-                ): Boolean {
-                    // Recover from renderer crash gracefully
-                    recreateWebView()
-                    return true
-                }
-            }
         }
+
+        webView = createWebView()
+
+        backButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_revert)
+            background = null
+            val size = (48 * resources.displayMetrics.density).toInt()
+            val margin = (12 * resources.displayMetrics.density).toInt()
+            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.START or Gravity.TOP).apply {
+                setMargins(margin, margin, margin, margin)
+            }
+            setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        }
+
+        container.addView(webView)
+        container.addView(backButton)
+        setContentView(container)
+
         val cookieManager = CookieManager.getInstance()
         cookieManager.setAcceptCookie(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.setAcceptThirdPartyCookies(webView, true)
         }
-        setContentView(webView)
 
         if (savedInstanceState != null) {
             webView.restoreState(savedInstanceState)
@@ -165,7 +172,15 @@ abstract class AccountWebViewActivity : ComponentActivity() {
         parent?.removeView(webView)
         webView.destroy()
 
-        webView = WebView(this).apply {
+        webView = createWebView()
+        (parent ?: window.decorView as? ViewGroup)?.addView(webView)
+        if (targetUrl.isNotBlank()) {
+            webView.loadUrl(targetUrl, headers)
+        }
+    }
+
+    private fun createWebView(): WebView {
+        return WebView(this).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
@@ -183,10 +198,6 @@ abstract class AccountWebViewActivity : ComponentActivity() {
                     return true
                 }
             }
-        }
-        (parent ?: window.decorView as? ViewGroup)?.addView(webView)
-        if (targetUrl.isNotBlank()) {
-            webView.loadUrl(targetUrl, headers)
         }
     }
 

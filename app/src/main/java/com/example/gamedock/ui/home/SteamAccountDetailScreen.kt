@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -15,6 +17,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.gamedock.data.model.account.SteamAccount
 import com.example.gamedock.ui.Screen
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SteamAccountDetailScreen(
     navController: androidx.navigation.NavController,
@@ -43,55 +46,67 @@ fun SteamAccountDetailScreen(
         return
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        Image(
-            painter = rememberAsyncImagePainter(account.avatar),
-            contentDescription = null,
-            modifier = Modifier.size(96.dp)
-        )
-
-        Spacer(Modifier.height(16.dp))
-
-        Text(account.nickname, style = MaterialTheme.typography.headlineSmall)
-        Text("Steam ID: ${account.id}", style = MaterialTheme.typography.bodyMedium)
-
-        Spacer(Modifier.height(24.dp))
-
-        // Open Steam profile page
-        Button(
-            onClick = {
-                val intent = Intent(context, SteamProfileActivity::class.java).apply {
-                    putExtra(SteamProfileActivity.EXTRA_ACCOUNT_ID, account.id)
-                    putExtra(
-                        SteamProfileActivity.EXTRA_PROFILE_URL,
-                        "https://steamcommunity.com/profiles/${account.id}"
-                    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(account.nickname.ifBlank { "Steam Account" }) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
-                context.startActivity(intent)
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Open Steam Profile")
+            )
         }
-
-        Spacer(Modifier.height(16.dp))
-
-        // Delete account
-        Button(
-            onClick = {
-                vm.deleteAccount(account)
-                navController.popBackStack()
-            },
-            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
-            modifier = Modifier.fillMaxWidth()
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Delete Account")
+
+            Image(
+                painter = rememberAsyncImagePainter(account.avatar),
+                contentDescription = null,
+                modifier = Modifier.size(96.dp)
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Text(account.nickname, style = MaterialTheme.typography.headlineSmall)
+            Text("Steam ID: ${account.id}", style = MaterialTheme.typography.bodyMedium)
+
+            Spacer(Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    val intent = Intent(context, SteamProfileActivity::class.java).apply {
+                        putExtra(SteamProfileActivity.EXTRA_ACCOUNT_ID, account.id)
+                        putExtra(
+                            SteamProfileActivity.EXTRA_PROFILE_URL,
+                            "https://steamcommunity.com/profiles/${account.id}"
+                        )
+                    }
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Open Steam Profile")
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    vm.deleteAccount(account)
+                    navController.popBackStack()
+                },
+                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.error),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Delete Account")
+            }
         }
     }
 }
