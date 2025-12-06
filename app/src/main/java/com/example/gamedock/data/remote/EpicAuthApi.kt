@@ -33,6 +33,7 @@ object EpicAuthApi {
     suspend fun exchangeAuthCodeForToken(authCode: String): JSONObject? =
         withContext(Dispatchers.IO) {
 
+            // Build x-www-form-urlencoded body and execute OAuth token request.
             val form = FormBody.Builder()
                 .add("grant_type", "authorization_code")
                 .add("code", authCode)
@@ -73,6 +74,7 @@ object EpicAuthApi {
     suspend fun refreshToken(refreshToken: String): JSONObject? =
         withContext(Dispatchers.IO) {
 
+            // Refresh tokens using stored refresh_token via OAuth endpoint.
             val form = FormBody.Builder()
                 .add("grant_type", "refresh_token")
                 .add("refresh_token", refreshToken)

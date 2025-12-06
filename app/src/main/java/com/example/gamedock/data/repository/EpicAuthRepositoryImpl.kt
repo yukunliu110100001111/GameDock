@@ -13,6 +13,7 @@ class EpicAuthRepositoryImpl @Inject constructor() : EpicAuthRepository {
 
     override suspend fun exchangeAuthCode(authorizationCode: String): EpicAuthTokens? =
         withContext(Dispatchers.IO) {
+            // Code -> token exchange, then verify access token to fetch display name.
             val raw = EpicAuthApi.exchangeAuthCodeForToken(authorizationCode) ?: return@withContext null
             val tokens = raw.toTokens() ?: return@withContext null
             val profile = EpicAuthApi.verifyAccessToken(tokens.accessToken)
@@ -21,6 +22,7 @@ class EpicAuthRepositoryImpl @Inject constructor() : EpicAuthRepository {
 
     override suspend fun refreshTokens(refreshToken: String): EpicAuthTokens? =
         withContext(Dispatchers.IO) {
+            // Refresh existing tokens using a stored refresh_token.
             val raw = EpicAuthApi.refreshToken(refreshToken) ?: return@withContext null
             raw.toTokens()
         }

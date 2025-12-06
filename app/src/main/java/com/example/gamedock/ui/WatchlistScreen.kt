@@ -35,6 +35,7 @@ fun WatchlistScreen(
     onOpenCompare: (String) -> Unit,
     viewModel: WatchlistViewModel = hiltViewModel()
 ) {
+    // Main watchlist surface that renders all saved entries and allows quick actions.
     val items by viewModel.items.collectAsState()
 
     Column(
@@ -82,6 +83,7 @@ private fun WatchlistCard(
     onToggleNotifications: (Boolean) -> Unit,
     onOpenCompare: (String) -> Unit
 ) {
+    // Single watchlist row with image, title, per-entry notification toggle, and delete.
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -183,6 +185,7 @@ class WatchlistViewModel @Inject constructor(
     private val repo: WatchlistRepository
 ) : ViewModel() {
 
+    // Exposes a StateFlow so the screen can react to additions/removals in real time.
     val items: StateFlow<List<WatchlistEntity>> =
         repo.watchlistFlow().stateIn(
             viewModelScope,
@@ -191,12 +194,14 @@ class WatchlistViewModel @Inject constructor(
         )
 
     fun delete(gameId: String) {
+        // Remove an item by id from the watchlist.
         viewModelScope.launch {
             repo.remove(gameId)
         }
     }
 
     fun setNotifications(gameId: String, enabled: Boolean) {
+        // Toggle per-item notification preference.
         viewModelScope.launch {
             repo.setNotificationsEnabled(gameId, enabled)
         }

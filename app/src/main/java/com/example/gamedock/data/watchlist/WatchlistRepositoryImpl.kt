@@ -22,6 +22,7 @@ class WatchlistRepositoryImpl @Inject constructor(
 
     private val _state = MutableStateFlow(loadFromPrefs())
     private fun loadFromPrefs(): List<WatchlistEntity> {
+        // Deserialize watchlist entries; retrofit missing notification flags for older data.
         val json = prefs.getString(key, null) ?: return emptyList()
         val hasFlag = json.contains("notificationsEnabled")
         return runCatching { gson.fromJson<List<WatchlistEntity>>(json, type) }
@@ -32,6 +33,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     }
 
     private fun persist(list: List<WatchlistEntity>) {
+        // Persist the entire list atomically.
         val json = gson.toJson(list, type)
         prefs.edit().putString(key, json).apply()
     }
@@ -39,6 +41,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     override fun watchlistFlow(): Flow<List<WatchlistEntity>> = _state.asStateFlow()
 
     override suspend fun addOrUpdate(item: WatchlistEntity) {
+        // Upsert an entry, preserving original added time and notification flag.
         val current = _state.value.toMutableList()
         val index = current.indexOfFirst { it.gameId == item.gameId }
         if (index >= 0) {
@@ -55,6 +58,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     }
 
     override suspend fun remove(gameId: String) {
+        // Delete an entry by id.
         val current = _state.value.toMutableList()
         val removed = current.removeAll { it.gameId == gameId }
         if (removed) {
@@ -64,6 +68,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateLastKnownPrice(gameId: String, price: Double) {
+        // Track last seen price to detect drops.
         val current = _state.value.toMutableList()
         val index = current.indexOfFirst { it.gameId == gameId }
         if (index >= 0) {
@@ -74,6 +79,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     }
 
     override suspend fun setNotificationsEnabled(gameId: String, enabled: Boolean) {
+        // Toggle per-item notification preference.
         val current = _state.value.toMutableList()
         val index = current.indexOfFirst { it.gameId == gameId }
         if (index >= 0) {
@@ -84,6 +90,7 @@ class WatchlistRepositoryImpl @Inject constructor(
     }
 
     override suspend fun get(gameId: String): WatchlistEntity? {
+        // Retrieve a single entry by id.
         return _state.value.firstOrNull { it.gameId == gameId }
     }
 }

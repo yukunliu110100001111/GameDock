@@ -47,6 +47,7 @@ fun AccountCard(
     onClick: (PlatformAccount) -> Unit,
     onDelete: (PlatformAccount) -> Unit
 ) {
+    // Card for a linked platform account with avatar, metadata, and delete action.
 
     Card(
         modifier = Modifier
@@ -157,6 +158,7 @@ fun AccountCard(
 }
 
 private fun stripCdata(text: String?): String {
+    // Strip CDATA markers and trim spacing from platform-provided text.
     if (text.isNullOrBlank()) return ""
     return text.replace("<!\\[CDATA\\[".toRegex(), "")
         .replace("]]>", "")
@@ -164,6 +166,7 @@ private fun stripCdata(text: String?): String {
 }
 
 private fun PlatformAccount.platformName(): String {
+    // Fallback display names per platform.
     return when (platform) {
         PlatformType.Steam -> "Steam User"
         PlatformType.Epic -> "Epic User"
@@ -171,6 +174,7 @@ private fun PlatformAccount.platformName(): String {
 }
 
 private fun buildFallbackAvatar(name: String): String {
+    // Deterministic avatar generation for accounts without profile images.
     val safe = URLEncoder.encode(name.ifBlank { "Player" }, StandardCharsets.UTF_8.toString())
     return "https://ui-avatars.com/api/?name=$safe&background=4F46E5&color=fff&bold=true"
 }

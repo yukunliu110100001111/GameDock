@@ -17,6 +17,7 @@ import com.example.gamedock.ui.home.AddSteamAccountScreen
 fun NavGraph(
     navController: NavHostController
 ) {
+    // Central navigation graph for all screens in the app.
     NavHost(
         navController = navController,
         startDestination = Screen.Home.route

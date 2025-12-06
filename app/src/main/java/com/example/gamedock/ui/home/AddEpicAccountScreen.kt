@@ -24,6 +24,7 @@ fun AddEpicAccountScreen(
     viewModel: AddEpicAccountViewModel = hiltViewModel()
 ) {
 
+    // Epic login flow via WebView to capture authorization code and save account.
     val context = LocalContext.current
     val homeEntry = remember(navController) { navController.getBackStackEntry(Screen.Home.route) }
     val uiState by viewModel.uiState.collectAsState()

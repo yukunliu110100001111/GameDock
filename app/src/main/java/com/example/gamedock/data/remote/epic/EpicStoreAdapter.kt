@@ -9,6 +9,7 @@ class EpicStoreAdapter @Inject constructor(
     private val api: EpicApiService
 ) {
     suspend fun fetchFreebies(): List<Freebie> {
+        // Pull Epic store catalog promotions and extract current/upcoming free games.
         val response = api.getFreeGames()
 
         val elements = response.data

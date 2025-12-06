@@ -46,6 +46,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val container = FrameLayout(this).apply {
+            // Hosts the webview and an overlay back button.
             layoutParams = FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
@@ -76,6 +77,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
         }
 
         if (savedInstanceState != null) {
+            // Restore existing WebView state after process recreation.
             webView.restoreState(savedInstanceState)
             return
         }
@@ -87,6 +89,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
         targetUrl = config.targetUrl
 
         lifecycleScope.launch {
+            // Apply platform credentials before loading the target page.
             val credentials = credentialsProvider.getCredentials(config.platform, config.accountId)
             if (credentials == null) {
                 finish()
@@ -115,6 +118,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     protected abstract fun resolveConfig(): WebViewConfig?
 
     private suspend fun clearCookies(platform: PlatformType) {
+        // Clear Steam cookies to avoid stale sessions before injecting new ones.
         if (platform != PlatformType.Steam) return
         val cookieManager = CookieManager.getInstance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -133,6 +137,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     }
 
     private fun applyCredentials(credentials: AccountCredentials) {
+        // Inject headers or cookies depending on platform.
         when (credentials.platform) {
             PlatformType.Epic -> {
                 val token = credentials.accessToken
@@ -156,11 +161,13 @@ abstract class AccountWebViewActivity : ComponentActivity() {
     }
 
     private fun sanitizeCookieValue(value: String): String {
+        // Percent-encode cookie values that lack encoding.
         if (value.isEmpty()) return value
         return if (value.contains('%')) value else Uri.encode(value, COOKIE_ALLOWED_CHARS)
     }
 
     private fun recreateWebView() {
+        // Recreate WebView after a render crash and reload target if present.
         if (!::webView.isInitialized) return
         renderRestartAttempts += 1
         if (renderRestartAttempts > 2) {
@@ -194,6 +201,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
                     view: WebView?,
                     detail: RenderProcessGoneDetail?
                 ): Boolean {
+                    // Attempt recovery by recreating the WebView.
                     recreateWebView()
                     return true
                 }

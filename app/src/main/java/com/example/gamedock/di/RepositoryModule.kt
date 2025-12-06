@@ -27,34 +27,40 @@ abstract class RepositoryModule {
     abstract fun bindDealsRepository(
         dealsRepositoryImpl: DealsRepositoryImpl
     ): DealsRepository
+    // Maps real DealsRepository implementation to its interface.
 
     @Binds
     @Singleton
     abstract fun bindAccountsRepository(
         impl: AccountsRepositoryImpl
     ): AccountsRepository
+    // Persists and reads platform accounts (Steam/Epic).
 
     @Binds
     @Singleton
     abstract fun bindEpicAuthRepository(
         impl: EpicAuthRepositoryImpl
     ): EpicAuthRepository
+    // Handles Epic OAuth code/token exchanges.
 
     @Binds
     @Singleton
     abstract fun bindAccountCredentialsProvider(
         impl: AccountCredentialsProviderImpl
     ): AccountCredentialsProvider
+    // Supplies stored credentials to WebViews.
 
     @Binds
     @Singleton
     abstract fun bindWatchlistRepository(
         impl: WatchlistRepositoryImpl
     ): WatchlistRepository
+    // Watchlist persistence exposed via interface.
 
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(
         impl: SettingsRepositoryImpl
     ): SettingsRepository
+    // Settings persistence (notifications/Epic auto-refresh).
 }

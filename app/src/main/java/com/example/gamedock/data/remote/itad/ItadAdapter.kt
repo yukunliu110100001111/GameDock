@@ -59,6 +59,7 @@ class ItadAdapter @Inject constructor(
      * Compares prices for a game based on the search query.
      */
     suspend fun comparePrices(gameQuery: String): List<Offer> {
+        // Search for a game id then fetch offers; returns empty on lookup failure.
         val search = runCatching {
             itadApiService.searchGame(
                 apiKey = ITAD_API_KEY,
@@ -84,6 +85,7 @@ class ItadAdapter @Inject constructor(
         gameTitle: String,
         imageUrl: String?
     ): List<Offer> {
+        // Direct compare when we already have an ITAD game id.
         return fetchOffers(gameId, gameTitle, imageUrl)
     }
 
@@ -92,6 +94,7 @@ class ItadAdapter @Inject constructor(
         gameTitle: String,
         imageUrl: String?
     ): List<Offer> {
+        // Map ITAD deal results into Offer models with fallback images.
         return runCatching {
             val priceResponse = itadApiService.getGamePrices(
                 apiKey = ITAD_API_KEY,
@@ -121,6 +124,7 @@ class ItadAdapter @Inject constructor(
     }
 
     suspend fun searchGames(query: String): List<ItadSearchItem> {
+        // Query ITAD for game search results (debounced upstream).
         return runCatching {
             itadApiService.searchGame(
                 apiKey = ITAD_API_KEY,
@@ -182,6 +186,7 @@ class ItadAdapter @Inject constructor(
      * Searches for bundles containing the specified game.
      */
     suspend fun searchBundles(gameQuery: String): List<BundleDeal> {
+        // Find bundles that include the searched game.
         try {
             val searchResults = itadApiService.searchGame(
                 apiKey = ITAD_API_KEY,
@@ -240,6 +245,7 @@ class ItadAdapter @Inject constructor(
      * Default feed: query a small set of popular games, then merge their overview bundles.
      */
     suspend fun getBundlesFeed(): List<BundleDeal> {
+        // Default feed seeded by popular titles; merges bundle overviews.
         val seedTitles = listOf(
             "cyberpunk 2077",
             "elden ring",

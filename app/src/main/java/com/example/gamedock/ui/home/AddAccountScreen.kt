@@ -13,6 +13,7 @@ import com.example.gamedock.data.model.PlatformType
 @Composable
 fun AddAccountScreen(navController: NavController) {
 
+    // Simple menu to choose which platform account to add.
     val platforms = listOf(
         PlatformType.Steam,
         PlatformType.Epic,

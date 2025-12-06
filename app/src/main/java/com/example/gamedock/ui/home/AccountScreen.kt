@@ -31,6 +31,7 @@ fun AccountScreen(
     navController: NavController,
     account: SteamAccount
 ) {
+    // Legacy detail view for a Steam account; mostly informational.
     val context = LocalContext.current
     var loginStatus by remember { mutableStateOf<String?>(null) }
 

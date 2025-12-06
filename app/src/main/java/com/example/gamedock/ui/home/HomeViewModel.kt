@@ -32,6 +32,7 @@ class HomeViewModel @Inject constructor(
     private var hasLoadedOnce = false
 
     fun loadAllAccounts(force: Boolean = false) {
+        // Load Steam/Epic accounts from storage, optionally forcing a refresh.
         viewModelScope.launch {
             if (!force && hasLoadedOnce && _uiState.value.accounts.isNotEmpty()) return@launch
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
@@ -50,6 +51,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun deleteAccount(account: PlatformAccount) {
+        // Delete the given account and refresh the list.
         viewModelScope.launch {
             when (account.platform) {
                 PlatformType.Steam -> accountsRepository.deleteSteamAccount(account.id)
@@ -62,6 +64,7 @@ class HomeViewModel @Inject constructor(
     }
 
     suspend fun refreshEpicAccount(account: EpicAccount): Boolean {
+        // Refresh Epic tokens for a single account and update UI state.
         val tokens = epicAuthRepository.refreshTokens(account.refreshToken) ?: return false
         accountsRepository.saveEpicAccount(
             account.copy(

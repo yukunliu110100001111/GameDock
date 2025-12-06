@@ -11,6 +11,7 @@ class GamerPowerStoreAdapter @Inject constructor(
 ) {
 
     suspend fun fetchFreebies(): List<Freebie> {
+        // Fetch non-Epic giveaways from GamerPower and map to internal Freebie.
         val dtos = api.getGiveaways(type = "game")
             .filterNot { it.platforms?.contains("Epic", ignoreCase = true) == true }
 

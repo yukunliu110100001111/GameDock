@@ -29,6 +29,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideGson(): Gson {
+        // Shared Gson instance for Retrofit converters and JSON (watchlist, cache).
         return GsonBuilder().create()
     }
 
@@ -42,6 +43,7 @@ object NetworkModule {
     @Singleton
     @Named("EpicRetrofit")
     fun provideEpicRetrofit(gson: Gson): Retrofit {
+        // Retrofit client for Epic freebies API.
         return Retrofit.Builder()
             .baseUrl(EPIC_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(gson))
@@ -51,6 +53,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideEpicApiService(@Named("EpicRetrofit") retrofit: Retrofit): EpicApiService {
+        // Epic freebies service interface.
         return retrofit.create(EpicApiService::class.java)
     }
 
@@ -64,6 +67,7 @@ object NetworkModule {
     @Singleton
     @Named("ItadRetrofit")
     fun provideItadRetrofit(gson: Gson): Retrofit {
+        // Retrofit client for ITAD search/price APIs.
         return Retrofit.Builder()
             .baseUrl(ITAD_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(gson))
@@ -73,6 +77,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideItadApiService(@Named("ItadRetrofit") retrofit: Retrofit): ItadApiService {
+        // ITAD service interface.
         return retrofit.create(ItadApiService::class.java)
     }
 
@@ -86,6 +91,7 @@ object NetworkModule {
     @Singleton
     @Named("GamerPowerRetrofit")
     fun provideGamerPowerRetrofit(gson: Gson): Retrofit {
+        // Retrofit client for GamerPower giveaways feed.
         return Retrofit.Builder()
             .baseUrl(GAMERPOWER_BASE_URL)
             .addConverterFactory(GsonConverterFactory.create(gson))
@@ -97,6 +103,7 @@ object NetworkModule {
     fun provideGamerPowerApiService(
         @Named("GamerPowerRetrofit") retrofit: Retrofit
     ): GamerPowerApiService {
+        // GamerPower service interface.
         return retrofit.create(GamerPowerApiService::class.java)
     }
 

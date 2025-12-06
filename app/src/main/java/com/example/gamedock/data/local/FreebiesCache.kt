@@ -18,11 +18,13 @@ class FreebiesCache @Inject constructor(
     private val type = object : TypeToken<List<Freebie>>() {}.type
 
     fun load(): List<Freebie> {
+        // Read cached freebies list; return empty on parse errors.
         val json = prefs.getString(key, null) ?: return emptyList()
         return runCatching { gson.fromJson<List<Freebie>>(json, type) }.getOrElse { emptyList() }
     }
 
     fun save(list: List<Freebie>) {
+        // Persist freebies to disk for quick startup/offline use.
         val json = gson.toJson(list, type)
         prefs.edit().putString(key, json).apply()
     }

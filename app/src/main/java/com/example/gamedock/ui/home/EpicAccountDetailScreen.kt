@@ -28,6 +28,7 @@ fun EpicAccountDetailScreen(
     navController: androidx.navigation.NavController,
     epicId: String
 ) {
+    // Detail view for an Epic account with profile link, token refresh, and delete.
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val parentEntry = remember(navController) {

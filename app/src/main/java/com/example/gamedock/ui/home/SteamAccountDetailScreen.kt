@@ -27,6 +27,7 @@ fun SteamAccountDetailScreen(
     navController: androidx.navigation.NavController,
     steamId: String
 ) {
+    // Detail view for a single Steam account with profile link and delete action.
     val context = LocalContext.current
     val parentEntry = remember(navController) {
         navController.getBackStackEntry(Screen.Home.route)

@@ -25,6 +25,7 @@ class DealsRepositoryImpl @Inject constructor(
      * Fetches a list of freebies from the Epic Store.
      */
     override suspend fun getFreebies(): List<Freebie> {
+        // Try network sources first; fall back to cached list if they fail.
         val cached = freebiesCache.load()
 
         val network = runCatching {

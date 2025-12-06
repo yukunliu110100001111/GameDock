@@ -35,6 +35,7 @@ fun AddSteamAccountScreen(
     viewModel: AddSteamAccountViewModel = hiltViewModel()
 ) {
 
+    // Flow for capturing Steam cookies manually or via WebView login and saving the account.
     val context = LocalContext.current
     val homeEntry = remember(navController) { navController.getBackStackEntry(Screen.Home.route) }
 

@@ -22,6 +22,7 @@ class AccountsRepositoryImpl @Inject constructor(
 ) : AccountsRepository {
 
     override suspend fun loadAllAccounts(): List<PlatformAccount> = withContext(Dispatchers.IO) {
+        // Load accounts from local storage and enrich with avatars/nicknames where possible.
         // --- Steam: try to enrich nickname/avatar on demand ---
         val steam = SteamAccountStore.loadAll(context).map { acc ->
             val baseName = stripCdata(acc.nickname).ifBlank { "Steam User" }
@@ -73,23 +74,28 @@ class AccountsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveSteamAccount(account: SteamAccount) = withContext(Dispatchers.IO) {
+        // Persist or replace a Steam account entry.
         SteamAccountStore.saveAccount(context, account)
     }
 
     override suspend fun saveEpicAccount(account: EpicAccount) = withContext(Dispatchers.IO) {
+        // Persist or replace an Epic account entry.
         EpicAccountStore.saveAccount(context, account)
     }
 
     override suspend fun deleteSteamAccount(id: String) = withContext(Dispatchers.IO) {
+        // Remove a Steam account by id.
         SteamAccountStore.delete(context, id)
     }
 
     override suspend fun deleteEpicAccount(id: String) = withContext(Dispatchers.IO) {
+        // Remove an Epic account by id.
         EpicAccountStore.delete(context, id)
     }
 
     override suspend fun findAccount(platform: PlatformType, id: String): PlatformAccount? =
         withContext(Dispatchers.IO) {
+            // Lookup a specific account from local storage.
             when (platform) {
                 PlatformType.Steam -> SteamAccountStore.loadAll(context).find { it.id == id }
                 PlatformType.Epic -> EpicAccountStore.loadAll(context).find { it.id == id }

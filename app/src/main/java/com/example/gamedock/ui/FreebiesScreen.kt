@@ -75,6 +75,7 @@ import javax.inject.Inject
 fun FreebiesScreen(
     viewModel: FreebiesViewModel = hiltViewModel()
 ) {
+    // Freebies list surface: shows active/upcoming giveaways and handles claim flows.
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -208,6 +209,7 @@ fun FreebieCard(
     freebie: Freebie,
     onClick: () -> Unit = {}
 ) {
+    // Card displaying a single freebie with store info and claim action.
     val context = LocalContext.current
 
     Card(
@@ -330,6 +332,7 @@ class FreebiesViewModel @Inject constructor(
     }
 
     fun onClaimClicked(freebie: Freebie) {
+        // Determine how to claim based on platform and available accounts.
         viewModelScope.launch {
 
             val platform = freebie.platformType()
@@ -374,6 +377,7 @@ class FreebiesViewModel @Inject constructor(
     }
 
     fun onAccountChosen(accountId: String, platform: PlatformType, url: String) {
+        // User picked an account from the dialog; proceed to WebView claim.
         viewModelScope.launch {
             _claimEvent.emit(
                 ClaimUiEvent.OpenWebView(
@@ -386,6 +390,7 @@ class FreebiesViewModel @Inject constructor(
     }
 
     private fun loadCached() {
+        // Seed UI with locally cached freebies to avoid blank screen on launch.
         val cached = repository.getCachedFreebies()
         if (cached.isEmpty()) return
         val (active, upcoming) = partitionFreebies(cached)
@@ -398,6 +403,7 @@ class FreebiesViewModel @Inject constructor(
     }
 
     private fun partitionFreebies(freebies: List<Freebie>): Pair<List<Freebie>, List<Freebie>> {
+        // Split freebies into active vs upcoming using start/end windows.
         val now = System.currentTimeMillis()
         val active = freebies.filter { freebie ->
             val start = freebie.startDateMillis ?: 0L
@@ -412,6 +418,7 @@ class FreebiesViewModel @Inject constructor(
     }
 
     fun refresh() {
+        // Force refresh from network and update UI buckets.
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             runCatching { repository.getFreebies() }
@@ -445,6 +452,7 @@ private fun AccountSelectDialog(
     onDismiss: () -> Unit,
     onSelect: (String) -> Unit
 ) {
+    // Modal dialog prompting user to pick an account for claim flow.
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Choose ${data.platform.name} account") },
@@ -490,6 +498,7 @@ private fun AccountSelectDialog(
 
 class CustomClaimActivity : AccountWebViewActivity() {
     override fun resolveConfig(): WebViewConfig? {
+        // Build WebView config using extras passed from FreebiesScreen.
         val accountId = intent.getStringExtra("account_id") ?: return null
         val url = intent.getStringExtra("target_url") ?: return null
         val platformName = intent.getStringExtra("platform") ?: return null

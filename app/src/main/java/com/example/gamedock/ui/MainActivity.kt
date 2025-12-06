@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
         }
 
     private fun askNotificationPermission() {
+        // Request POST_NOTIFICATIONS on Android 13+ if not yet granted.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasPermission = ContextCompat.checkSelfPermission(
                 this,
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun schedulePriceCheckWorker() {
+        // Enqueue periodic worker to scan watchlist prices every 6 hours.
         val request = PeriodicWorkRequestBuilder<PriceCheckWorker>(
             6, TimeUnit.HOURS
         ).build()

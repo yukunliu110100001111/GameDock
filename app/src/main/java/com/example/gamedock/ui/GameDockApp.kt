@@ -15,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun GameDockApp() {
+    // Root Compose scaffold that wires up the app bar, bottom nav, and navigation host.
     val navController = rememberNavController()
 
     Scaffold(

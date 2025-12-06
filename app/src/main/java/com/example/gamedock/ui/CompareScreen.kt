@@ -82,6 +82,7 @@ fun CompareScreen(
     queryFromRoute: String,
     viewModel: CompareViewModel = hiltViewModel()
 ) {
+    // Price comparison entry screen: handles search -> game selection -> offers/bundles display.
     val uiState by viewModel.uiState.collectAsState()
     val gsonLocal = remember { Gson() }
 
@@ -312,6 +313,7 @@ fun CompareScreen(
 
 @Composable
 private fun BestOfferSummary(results: List<Offer>) {
+    // Small highlight card showing the cheapest option and potential savings.
     if (results.isEmpty()) return
     val min = results.minByOrNull { it.currentPrice } ?: return
     val max = results.maxByOrNull { it.currentPrice } ?: min
@@ -343,6 +345,7 @@ private fun BestOfferSummary(results: List<Offer>) {
 
 @Composable
 private fun BestBadge(modifier: Modifier = Modifier) {
+    // Tiny badge over the best-priced card.
     Surface(
         modifier = modifier
             .padding(start = 6.dp, top = 6.dp)
@@ -363,6 +366,7 @@ private fun BestBadge(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SkeletonPriceCard() {
+    // Simple skeleton used while offers are loading.
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -375,6 +379,7 @@ private fun SkeletonPriceCard() {
 
 @Composable
 private fun BundleCard(bundle: BundleDeal) {
+    // Bundle row showing store, expiry urgency, price, and included titles.
     val uriHandler = LocalUriHandler.current
     val expiry = parseExpiry(bundle.expiry)
     val remaining = remainingLabel(expiry)
@@ -434,6 +439,7 @@ private fun BundleCard(bundle: BundleDeal) {
 
 @Composable
 private fun StoreChip(store: String) {
+    // Lightweight store badge for bundle rows.
     val bg = storeColor(store)
     Surface(
         color = bg.copy(alpha = 0.18f),
@@ -452,6 +458,7 @@ private fun StoreChip(store: String) {
 
 @Composable
 private fun StatusBadge(text: String, color: Color) {
+    // Status badge for bundle expiry/countdown.
     Surface(
         color = color.copy(alpha = 0.25f),
         shape = RoundedCornerShape(50),
@@ -469,6 +476,7 @@ private fun StatusBadge(text: String, color: Color) {
 
 @Composable
 private fun storeColor(store: String): Color = when {
+    // Quick palette mapping to distinguish store badges.
     store.contains("Steam", true) -> Color(0xFF1B6FBC)
     store.contains("Epic", true) -> Color(0xFF9146FF)
     store.contains("GOG", true) -> Color(0xFF673AB7)
@@ -478,17 +486,19 @@ private fun storeColor(store: String): Color = when {
 }
 
 private fun Color.darken(factor: Float): Color {
+    // Simple color darkener for badge foreground contrast.
     val r = (red * (1 - factor)).coerceIn(0f, 1f)
     val g = (green * (1 - factor)).coerceIn(0f, 1f)
     val b = (blue * (1 - factor)).coerceIn(0f, 1f)
     return Color(r, g, b, alpha)
 }
 
-private fun parseExpiry(raw: String?): Long? = runCatching {
-    java.time.Instant.parse(raw).toEpochMilli()
-}.getOrNull()
+private fun parseExpiry(raw: String?): Long? =
+    // Parse ISO timestamp to millis; return null on failure.
+    runCatching { java.time.Instant.parse(raw).toEpochMilli() }.getOrNull()
 
 private fun remainingLabel(expiryMillis: Long?): String? {
+    // Human-friendly remaining time for bundle expiry.
     expiryMillis ?: return null
     val diff = expiryMillis - System.currentTimeMillis()
     if (diff <= 0) return null
@@ -523,6 +533,7 @@ class CompareViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
+    // UI-facing state; persisted via SavedStateHandle for simple restoration.
     private val _uiState = MutableStateFlow(CompareUiState())
     val uiState: StateFlow<CompareUiState> = _uiState.asStateFlow()
 
@@ -530,6 +541,7 @@ class CompareViewModel @Inject constructor(
     private var searchJob: Job? = null
 
     init {
+        // Keep watchlist membership in sync so hearts reflect current status.
         restoreState()
         viewModelScope.launch {
             watchlistRepository.watchlistFlow().collect { list ->
@@ -541,12 +553,14 @@ class CompareViewModel @Inject constructor(
     }
 
     fun onSearchQueryChange(query: String) {
+        // Update query as user types and schedule a debounced search.
         _uiState.value = _uiState.value.copy(query = query)
         savedStateHandle["compare_query"] = query
         scheduleSearchResults(query)
     }
 
     fun searchNow() {
+        // Immediate search triggered by keyboard action or refresh icon.
         val selected = _uiState.value.selectedGame
         if (selected != null) {
             fetchOffersFor(selected)
@@ -556,6 +570,7 @@ class CompareViewModel @Inject constructor(
     }
 
     fun toggleSort() {
+        // Flip between ascending/descending price ordering.
         val newAsc = !_uiState.value.sortAscending
         _uiState.value = _uiState.value.copy(
             sortAscending = newAsc,
@@ -567,6 +582,7 @@ class CompareViewModel @Inject constructor(
         if (ascending) list.sortedBy { it.currentPrice } else list.sortedByDescending { it.currentPrice }
 
     private fun scheduleSearchResults(query: String, immediate: Boolean = false) {
+        // Debounce search to avoid flooding API calls as user types.
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             if (!immediate) delay(300)
@@ -587,6 +603,7 @@ class CompareViewModel @Inject constructor(
     }
 
     private suspend fun loadSearchResults(query: String) {
+        // Hit ITAD search and update search list or error state.
         runCatching { repository.searchGames(query) }
             .onSuccess { games ->
                 _uiState.value = _uiState.value.copy(
@@ -608,6 +625,7 @@ class CompareViewModel @Inject constructor(
 
 
     fun toggleWatchlist(offer: Offer) {
+        // Heart toggle: add/remove offer from watchlist.
         viewModelScope.launch {
             val exists = _uiState.value.watchlistedIds.contains(offer.id)
             if (exists) {
@@ -628,6 +646,7 @@ class CompareViewModel @Inject constructor(
     }
 
     fun onSelectGame(game: ItadSearchItem) {
+        // User picked a game result: fetch offers and remember selection.
         _uiState.value = _uiState.value.copy(
             selectedGame = game,
             isLoading = true,
@@ -640,6 +659,7 @@ class CompareViewModel @Inject constructor(
     }
 
     private fun fetchOffersFor(game: ItadSearchItem) {
+        // Load price offers (and bundles) for the chosen game.
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
@@ -665,6 +685,7 @@ class CompareViewModel @Inject constructor(
     }
 
     fun setInitialQuery(q: String) {
+        // Used when arriving via nav arguments to prefill and trigger a search.
         if (q.isNotBlank() && _uiState.value.query != q) {
             _uiState.value = _uiState.value.copy(query = q)
             savedStateHandle["compare_query"] = q
@@ -673,6 +694,7 @@ class CompareViewModel @Inject constructor(
     }
 
     private fun restoreState() {
+        // Restore saved query/selection when process recreation occurs.
         val savedQuery: String? = savedStateHandle["compare_query"]
         val savedGameJson: String? = savedStateHandle["compare_selected"]
 

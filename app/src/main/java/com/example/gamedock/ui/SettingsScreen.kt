@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
+    // Settings surface: handles notification toggle and Epic auto-refresh preference.
     val uiState by viewModel.uiState.collectAsState()
     val context = androidx.compose.ui.platform.LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -149,6 +150,7 @@ class SettingsViewModel @Inject constructor(
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
+        // Observe stored preferences and expose them to UI.
         viewModelScope.launch {
             launch {
                 settingsRepository.notificationsEnabled.collect { enabled ->
@@ -164,6 +166,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun toggleNotifications() {
+        // Flip global notifications preference.
         viewModelScope.launch {
             val next = !_uiState.value.notificationsEnabled
             settingsRepository.setNotificationsEnabled(next)
@@ -171,12 +174,14 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
+        // Explicitly persist notification preference (used after permission flow).
         viewModelScope.launch {
             settingsRepository.setNotificationsEnabled(enabled)
         }
     }
 
     fun setEpicAutoRefresh(enabled: Boolean) {
+        // Persist Epic token auto-refresh preference.
         viewModelScope.launch {
             settingsRepository.setEpicAutoRefresh(enabled)
         }

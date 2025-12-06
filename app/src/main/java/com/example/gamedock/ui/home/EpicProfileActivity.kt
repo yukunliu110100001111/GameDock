@@ -5,6 +5,7 @@ import com.example.gamedock.data.model.PlatformType
 class EpicProfileActivity : AccountWebViewActivity() {
 
     override fun resolveConfig(): WebViewConfig? {
+        // Open Epic account settings page with bearer token header.
         val accountId = intent.getStringExtra(EXTRA_ACCOUNT_ID) ?: return null
         return WebViewConfig(
             platform = PlatformType.Epic,

@@ -86,11 +86,13 @@ class FakeDealsRepository : DealsRepository {
     }
 
     override suspend fun getFreebies(): List<Freebie> {
+        // Simulated latency and static freebies for preview/testing.
         delay(250) // Simulate network latency
         return mockFreebies
     }
 
     override suspend fun comparePrices(query: String): List<Offer> {
+        // Filter mock offers by query to mimic search results.
         delay(250)
         if (query.isBlank()) return emptyList()
         return mockOffers.filter { offer ->

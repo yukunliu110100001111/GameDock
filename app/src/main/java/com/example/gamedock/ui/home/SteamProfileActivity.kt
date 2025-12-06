@@ -5,6 +5,7 @@ import com.example.gamedock.data.model.PlatformType
 class SteamProfileActivity : AccountWebViewActivity() {
 
     override fun resolveConfig(): WebViewConfig? {
+        // Open Steam profile page using stored account cookies.
         val accountId = intent.getStringExtra(EXTRA_ACCOUNT_ID) ?: return null
         val url = intent.getStringExtra(EXTRA_PROFILE_URL)
             ?: "https://steamcommunity.com/profiles/$accountId"

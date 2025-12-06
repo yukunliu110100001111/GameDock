@@ -16,6 +16,7 @@ class AccountCredentialsProviderImpl @Inject constructor(
         platform: PlatformType,
         accountId: String
     ): AccountCredentials? {
+        // Fetch stored account and map to platform-specific credential payload.
         val account = accountsRepository.findAccount(platform, accountId) ?: return null
         return when (account) {
             is EpicAccount -> AccountCredentials(

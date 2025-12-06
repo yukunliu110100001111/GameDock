@@ -31,6 +31,7 @@ class AddEpicAccountViewModel @Inject constructor(
     val uiState: StateFlow<AddEpicAccountUiState> = _uiState.asStateFlow()
 
     fun completeAuthorization(code: String) {
+        // Exchange auth code for tokens, save account, and update UI completion flag.
         viewModelScope.launch {
             _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
             val tokens = epicAuthRepository.exchangeAuthCode(code)
@@ -53,6 +54,7 @@ class AddEpicAccountViewModel @Inject constructor(
     }
 
     fun onLoginCancelled() {
+        // Handle user cancelling the WebView login.
         _uiState.update {
             it.copy(
                 statusMessage = "Epic login flow cancelled.",
@@ -63,6 +65,7 @@ class AddEpicAccountViewModel @Inject constructor(
     }
 
     fun onMissingCode() {
+        // Handle cases where the auth code cannot be extracted.
         _uiState.update {
             it.copy(
                 statusMessage = "Failed to fetch authorization code, please retry.",
@@ -73,6 +76,7 @@ class AddEpicAccountViewModel @Inject constructor(
     }
 
     fun resetCompletionFlag() {
+        // Allow navigation after a successful save.
         _uiState.update { it.copy(isCompleted = false) }
     }
 

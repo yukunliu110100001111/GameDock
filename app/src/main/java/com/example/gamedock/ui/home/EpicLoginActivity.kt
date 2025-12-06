@@ -25,6 +25,7 @@ class EpicLoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         webView = WebView(this).apply {
+            // WebView login that intercepts Epic redirect to capture auth code.
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = object : WebViewClient() {
@@ -84,6 +85,7 @@ class EpicLoginActivity : ComponentActivity() {
     }
 
     private fun handleRedirect(url: String): Boolean {
+        // Parse redirect URLs to extract the authorization code.
         if (completed) return true
         val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return false
 
@@ -103,6 +105,7 @@ class EpicLoginActivity : ComponentActivity() {
     }
 
     private fun deliverCode(code: String) {
+        // Return the captured auth code to the caller.
         if (completed) return
         completed = true
         val resultIntent = Intent().apply {

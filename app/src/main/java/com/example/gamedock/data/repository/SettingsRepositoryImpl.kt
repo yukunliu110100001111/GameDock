@@ -28,11 +28,13 @@ class SettingsRepositoryImpl @Inject constructor(
     override val epicAutoRefreshEnabled: Flow<Boolean> = _epicAutoRefresh.asStateFlow()
 
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
+        // Persist global notification toggle and update flow.
         prefs.edit().putBoolean(keyNotifications, enabled).apply()
         _notifications.value = enabled
     }
 
     override suspend fun setEpicAutoRefresh(enabled: Boolean) {
+        // Persist Epic token auto-refresh preference and update flow.
         prefs.edit().putBoolean(keyEpicRefresh, enabled).apply()
         _epicAutoRefresh.value = enabled
     }

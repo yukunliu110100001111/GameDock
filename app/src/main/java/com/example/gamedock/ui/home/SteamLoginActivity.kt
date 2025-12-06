@@ -25,6 +25,7 @@ class SteamLoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         webView = WebView(this).apply {
+            // Minimal WebView setup to capture Steam cookies after login.
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             webViewClient = object : WebViewClient() {
@@ -65,6 +66,7 @@ class SteamLoginActivity : ComponentActivity() {
     }
 
     private fun checkCookies() {
+        // Read cookies for relevant domains and extract required entries.
         val cookies = mutableMapOf<String, String>()
         DOMAINS.forEach { domain ->
             val cookieStr = cookieManager.getCookie(domain) ?: return@forEach
@@ -91,6 +93,7 @@ class SteamLoginActivity : ComponentActivity() {
         sessionId: String,
         cookies: Map<String, String>
     ) {
+        // Return captured cookie values to the caller.
         val resultIntent = Intent().apply {
             putExtra(EXTRA_STEAM_LOGIN_SECURE, steamLoginSecure)
             putExtra(EXTRA_SESSION_ID, sessionId)
@@ -101,6 +104,7 @@ class SteamLoginActivity : ComponentActivity() {
     }
 
     private fun clearCookies() {
+        // Ensure a clean login session each time.
         cookieManager.setAcceptCookie(true)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             cookieManager.removeAllCookies {

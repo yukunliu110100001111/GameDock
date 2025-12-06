@@ -28,6 +28,7 @@ object EpicAccountStore {
      * Load all stored Epic accounts.
      */
     fun loadAll(context: Context): List<EpicAccount> {
+        // Read from encrypted prefs; return empty list on parse failure.
         val json = prefs(context).getString(KEY_JSON, "[]") ?: "[]"
         val type = object : TypeToken<List<EpicAccount>>() {}.type
         return gson.fromJson(json, type)
@@ -37,6 +38,7 @@ object EpicAccountStore {
      * Persist the full account list (internal use only).
      */
     fun saveList(context: Context, list: List<EpicAccount>) {
+        // Overwrite stored list with the provided snapshot.
         prefs(context).edit().putString(KEY_JSON, gson.toJson(list)).apply()
     }
 
@@ -44,6 +46,7 @@ object EpicAccountStore {
      * Save or replace a single account entry.
      */
     fun saveAccount(context: Context, account: EpicAccount) {
+        // Upsert entry keyed by id.
         val list = loadAll(context).toMutableList()
         list.removeAll { it.id == account.id } // avoid duplicates
         list.add(account)
@@ -54,6 +57,7 @@ object EpicAccountStore {
      * Delete an account by id.
      */
     fun delete(context: Context, epicId: String) {
+        // Remove matching account and rewrite list.
         val list = loadAll(context).filterNot { it.id == epicId }
         saveList(context, list)
     }

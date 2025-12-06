@@ -9,6 +9,7 @@ fun AccountDetailRouterScreen(
     platform: String,
     id: String
 ) {
+    // Simple router to platform-specific account detail screens.
     when (platform) {
         "Steam" -> SteamAccountDetailScreen(navController, id)
         "Epic" -> EpicAccountDetailScreen(navController, id)

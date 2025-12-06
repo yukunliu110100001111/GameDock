@@ -28,6 +28,7 @@ import com.example.gamedock.ui.components.AddAccountCard
 @Composable
 fun HomeScreen(navController: NavController) {
 
+    // Home surface showing all linked platform accounts with add/delete actions.
     val vm: HomeViewModel = hiltViewModel()
     val uiState by vm.uiState.collectAsState()
     val homeEntry = remember(navController) { navController.getBackStackEntry(Screen.Home.route) }

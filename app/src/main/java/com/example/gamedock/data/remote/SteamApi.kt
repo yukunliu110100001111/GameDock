@@ -16,6 +16,7 @@ object SteamApi {
         .build()
 
     fun fetchSteamProfile(steamId: String): Pair<String, String>? {
+        // Fetch Steam profile XML to extract display name and avatar URL.
         val url = "https://steamcommunity.com/profiles/$steamId/?xml=1"
 
         val req = Request.Builder().url(url).build()

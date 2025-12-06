@@ -27,6 +27,7 @@ class AddSteamAccountViewModel @Inject constructor(
     val uiState: StateFlow<AddSteamAccountUiState> = _uiState.asStateFlow()
 
     fun saveAccount(steamLoginSecure: String, sessionId: String, cookies: Map<String, String> = emptyMap()) {
+        // Persist a Steam account using captured cookies; errors surface in UI state.
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null) }
             runCatching {
@@ -55,10 +56,12 @@ class AddSteamAccountViewModel @Inject constructor(
     }
 
     fun resetSavedFlag() {
+        // Allow UI to navigate again after save.
         _uiState.update { it.copy(isSaved = false) }
     }
 
     private fun extractSteamId(steamLoginSecure: String): String {
+        // Derive steamId from cookie value; fallback prevents crashes if format changes.
         return steamLoginSecure
             .split("%7C%7C", "||")
             .firstOrNull()

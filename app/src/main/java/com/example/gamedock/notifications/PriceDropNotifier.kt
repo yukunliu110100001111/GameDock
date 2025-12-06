@@ -22,6 +22,7 @@ class PriceDropNotifier @Inject constructor(
     private val channelId = "price_drop"
 
     fun createNotificationChannel() {
+        // Ensure notification channel exists for price alerts (Android O+).
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
@@ -35,6 +36,7 @@ class PriceDropNotifier @Inject constructor(
 
     fun notifyPriceDrop(title: String, old: Double, new: Double, url: String?, imageUrl: String? = null) {
 
+        // Respect runtime notification permission on Android 13+.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(
                 context,
@@ -44,6 +46,7 @@ class PriceDropNotifier @Inject constructor(
             return
         }
 
+        // Open app on tap.
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context, 0, intent,
@@ -63,6 +66,7 @@ class PriceDropNotifier @Inject constructor(
 
     fun notifyFreeNow(title: String, url: String?, imageUrl: String? = null) {
 
+        // Respect runtime notification permission on Android 13+.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ActivityCompat.checkSelfPermission(
                 context,
@@ -72,6 +76,7 @@ class PriceDropNotifier @Inject constructor(
             return
         }
 
+        // Open app on tap.
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context, 1, intent,

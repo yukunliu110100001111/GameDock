@@ -23,6 +23,7 @@ object SteamAccountStore {
         )
 
     fun saveAccount(context: Context, account: SteamAccount) {
+        // Upsert a single Steam account in encrypted prefs.
         val list = loadAll(context).toMutableList()
 
         // Replace any existing account with the same steamId
@@ -33,6 +34,7 @@ object SteamAccountStore {
     }
 
     fun loadAll(context: Context): List<SteamAccount> {
+        // Deserialize all stored Steam accounts (or empty list if none).
         val json = prefs(context).getString(KEY_ACCOUNTS, null) ?: return emptyList()
         val arr = JSONArray(json)
 
@@ -55,6 +57,7 @@ object SteamAccountStore {
     }
 
     fun saveList(context: Context, list: List<SteamAccount>) {
+        // Persist the full account list atomically.
         val arr = JSONArray()
         list.forEach { acc ->
             arr.put(
@@ -84,6 +87,7 @@ object SteamAccountStore {
     }
 
     fun delete(context: Context, steamId: String) {
+        // Remove an account by steamId.
         val list = loadAll(context).toMutableList()
         list.removeAll { it.id == steamId }
         saveList(context, list)
