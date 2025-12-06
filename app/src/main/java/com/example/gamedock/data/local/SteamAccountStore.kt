@@ -46,6 +46,7 @@ object SteamAccountStore {
                     steamLoginSecure = o.getString("secure"),
                     sessionid = o.getString("sessionid"),
                     nickname = o.optString("nickname", "Steam User"),
+                    avatar = o.optString("avatar", ""),
                     cookies = readCookies(o, o.getString("id"), o.getString("secure"), o.getString("sessionid"))
                 )
             )
@@ -72,6 +73,7 @@ object SteamAccountStore {
                             put(name, value)
                         }
                     })
+                    put("avatar", acc.avatar)
                 }
             )
         }

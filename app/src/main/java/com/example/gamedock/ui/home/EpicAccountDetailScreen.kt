@@ -2,7 +2,7 @@ package com.example.gamedock.ui.home
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.Image
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,9 +13,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.gamedock.data.model.account.EpicAccount
 import com.example.gamedock.ui.Screen
+import com.example.gamedock.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,9 +72,25 @@ fun EpicAccountDetailScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Image(
-                painter = rememberAsyncImagePainter(account.avatar),
+            val context = LocalContext.current
+            val avatarRequest = remember(account.avatar) {
+                ImageRequest.Builder(context)
+                    .data(account.avatar)
+                    .listener(onError = { _, result ->
+                        Log.e(
+                            "AvatarLoad",
+                            "Failed to load Epic avatar for ${account.id} from ${account.avatar}",
+                            result.throwable
+                        )
+                    })
+                    .build()
+            }
+
+            AsyncImage(
+                model = avatarRequest,
                 contentDescription = null,
+                placeholder = androidx.compose.ui.res.painterResource(id = R.drawable.ic_launcher_foreground),
+                error = androidx.compose.ui.res.painterResource(id = R.drawable.ic_launcher_foreground),
                 modifier = Modifier.size(96.dp)
             )
 
