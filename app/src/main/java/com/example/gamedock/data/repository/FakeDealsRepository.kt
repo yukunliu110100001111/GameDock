@@ -4,6 +4,7 @@ import com.example.gamedock.data.model.BundleDeal
 import com.example.gamedock.data.model.BundleGame
 import com.example.gamedock.data.model.Freebie
 import com.example.gamedock.data.model.Offer
+import com.example.gamedock.data.remote.itad.ItadSearchItem
 import kotlinx.coroutines.delay
 
 /**
@@ -34,6 +35,8 @@ class FakeDealsRepository : DealsRepository {
             isClaimed = false
         )
     )
+
+    override fun getCachedFreebies(): List<Freebie> = mockFreebies
 
 
     private val mockOffers = listOf(
@@ -67,6 +70,21 @@ class FakeDealsRepository : DealsRepository {
         )
     )
 
+    override suspend fun searchGames(query: String): List<ItadSearchItem> {
+        delay(100)
+        if (query.isBlank()) return emptyList()
+        return listOf(
+            ItadSearchItem(
+                id = "mock-id-$query",
+                slug = query,
+                title = query,
+                type = "game",
+                mature = false,
+                assets = com.example.gamedock.data.remote.itad.ItadAssets(null,null,null,null,null)
+            )
+        )
+    }
+
     override suspend fun getFreebies(): List<Freebie> {
         delay(250) // Simulate network latency
         return mockFreebies
@@ -79,6 +97,10 @@ class FakeDealsRepository : DealsRepository {
             offer.gameTitle.contains(query, ignoreCase = true) ||
                 offer.store.contains(query, ignoreCase = true)
         }
+    }
+
+    override suspend fun comparePricesById(game: ItadSearchItem): List<Offer> {
+        return comparePrices(game.title)
     }
 
     override suspend fun searchBundles(query: String): List<BundleDeal> {

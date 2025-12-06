@@ -23,6 +23,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,8 +64,8 @@ import javax.inject.Inject
 import com.example.gamedock.R
 import com.example.gamedock.data.local.entity.WatchlistEntity
 import com.example.gamedock.data.repository.WatchlistRepository
-import com.example.gamedock.data.repository.WatchlistRepositoryImpl
 import com.example.gamedock.data.util.CurrencyUtils
+import com.example.gamedock.data.remote.itad.ItadSearchItem
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,9 +127,63 @@ fun CompareScreen(
                 text = "💰 Price Comparison$countText",
                 style = MaterialTheme.typography.headlineSmall,
             )
-            IconButton(onClick = { viewModel.toggleSort() }) {
-                Icon(Icons.Filled.SwapVert, contentDescription = "Toggle sort")
+            Row {
+                IconButton(onClick = { viewModel.searchNow() }) {
+                    Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
+                }
+                IconButton(onClick = { viewModel.toggleSort() }) {
+                    Icon(Icons.Filled.SwapVert, contentDescription = "Toggle sort")
+                }
             }
+        }
+
+        val selectedGame = uiState.selectedGame
+
+        if (selectedGame == null) {
+            if (uiState.isLoading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+                return
+            }
+            if (uiState.searchResults.isNotEmpty()) {
+                Text(
+                    text = "Select a game to compare:",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = Dimens.cardSpacing)
+                )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = Dimens.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(uiState.searchResults) { game ->
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { viewModel.onSelectGame(game) },
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ) {
+                            Column(Modifier.padding(12.dp)) {
+                                Text(game.title, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    text = game.slug,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Type to search and choose a game to compare prices.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            return
         }
 
         BestOfferSummary(uiState.results)
@@ -424,6 +479,8 @@ data class CompareUiState(
     val results: List<Offer> = emptyList(),
     val bundles: List<BundleDeal> = emptyList(),
     val watchlistedIds: Set<String> = emptySet(),
+    val searchResults: List<ItadSearchItem> = emptyList(),
+    val selectedGame: ItadSearchItem? = null,
     val errorMessage: String? = null,
     val sortAscending: Boolean = true
 )
@@ -452,11 +509,16 @@ class CompareViewModel @Inject constructor(
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(query = query)
-        scheduleSearch(query)
+        scheduleSearchResults(query)
     }
 
     fun searchNow() {
-        scheduleSearch(_uiState.value.query, immediate = true)
+        val selected = _uiState.value.selectedGame
+        if (selected != null) {
+            fetchOffersFor(selected)
+        } else {
+            scheduleSearchResults(_uiState.value.query, immediate = true)
+        }
     }
 
     fun toggleSort() {
@@ -470,39 +532,44 @@ class CompareViewModel @Inject constructor(
     private fun sortOffers(list: List<Offer>, ascending: Boolean): List<Offer> =
         if (ascending) list.sortedBy { it.currentPrice } else list.sortedByDescending { it.currentPrice }
 
-    private fun scheduleSearch(query: String, immediate: Boolean = false) {
+    private fun scheduleSearchResults(query: String, immediate: Boolean = false) {
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             if (!immediate) delay(300)
             if (query.isBlank()) {
                 _uiState.value = _uiState.value.copy(
+                    searchResults = emptyList(),
+                    selectedGame = null,
                     results = emptyList(),
                     bundles = emptyList(),
-                    isLoading = false
+                    isLoading = false,
+                    errorMessage = null
                 )
                 return@launch
             }
-
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            runCatching {
-                val offers = repository.comparePrices(query)
-                val bundles = repository.searchBundles(query)
-                offers to bundles
-            }.onSuccess { (offers, bundles) ->
+            loadSearchResults(query)
+        }
+    }
+
+    private suspend fun loadSearchResults(query: String) {
+        runCatching { repository.searchGames(query) }
+            .onSuccess { games ->
                 _uiState.value = _uiState.value.copy(
+                    searchResults = games,
+                    selectedGame = null,
                     isLoading = false,
-                    results = sortOffers(offers, _uiState.value.sortAscending),
-                    bundles = bundles
-                )
-            }.onFailure { throwable ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    results = emptyList(),
-                    bundles = emptyList(),
-                    errorMessage = throwable.message ?: "Unable to compare prices"
+                    errorMessage = null
                 )
             }
-        }
+            .onFailure { throwable ->
+                _uiState.value = _uiState.value.copy(
+                    searchResults = emptyList(),
+                    selectedGame = null,
+                    isLoading = false,
+                    errorMessage = throwable.message ?: "Unable to search games"
+                )
+            }
     }
 
 
@@ -522,6 +589,42 @@ class CompareViewModel @Inject constructor(
                     preferredStores = listOf(offer.store)
                 )
                 watchlistRepository.addOrUpdate(entry)
+            }
+        }
+    }
+
+    fun onSelectGame(game: ItadSearchItem) {
+        _uiState.value = _uiState.value.copy(
+            selectedGame = game,
+            isLoading = true,
+            errorMessage = null,
+            results = emptyList(),
+            bundles = emptyList()
+        )
+        fetchOffersFor(game)
+    }
+
+    private fun fetchOffersFor(game: ItadSearchItem) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            runCatching {
+                val offers = repository.comparePricesById(game)
+                val bundles = repository.searchBundles(game.title)
+                offers to bundles
+            }.onSuccess { (offers, bundles) ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    results = sortOffers(offers, _uiState.value.sortAscending),
+                    bundles = bundles
+                )
+            }.onFailure { throwable ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    results = emptyList(),
+                    bundles = emptyList(),
+                    errorMessage = throwable.message ?: "Unable to compare prices"
+                )
             }
         }
     }

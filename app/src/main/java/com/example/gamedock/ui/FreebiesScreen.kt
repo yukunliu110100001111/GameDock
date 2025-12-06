@@ -48,9 +48,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.gamedock.R
 import com.example.gamedock.data.model.PlatformType
 import com.example.gamedock.data.repository.AccountsRepository
 import com.example.gamedock.ui.home.AccountWebViewActivity
@@ -110,7 +117,19 @@ fun FreebiesScreen(
             .fillMaxSize()
             .padding(Dimens.screenPadding)
     ) {
-        SectionHeader("🎁 ${Strings.freebiesTitle}")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "🎁 ${Strings.freebiesTitle}",
+                style = MaterialTheme.typography.titleLarge
+            )
+            IconButton(onClick = viewModel::refresh) {
+                Icon(Icons.Filled.Refresh, contentDescription = "Refresh freebies")
+            }
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
@@ -183,7 +202,12 @@ fun FreebieCard(
             // Left cover image (will show automatically if imageUrl is provided later)
             if (freebie.imageUrl != null) {
                 AsyncImage(
-                    model = freebie.imageUrl,
+                    model = ImageRequest.Builder(context)
+                        .data(freebie.imageUrl)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                    error = painterResource(id = R.drawable.ic_launcher_foreground),
                     contentDescription = freebie.title,
                     modifier = Modifier
                         .size(80.dp)
@@ -277,6 +301,7 @@ class FreebiesViewModel @Inject constructor(
     val claimEvent = _claimEvent.asSharedFlow()
 
     init {
+        loadCached()
         refresh()
     }
 
@@ -315,23 +340,38 @@ class FreebiesViewModel @Inject constructor(
         }
     }
 
+    private fun loadCached() {
+        val cached = repository.getCachedFreebies()
+        if (cached.isEmpty()) return
+        val (active, upcoming) = partitionFreebies(cached)
+        _uiState.value = FreebiesUiState(
+            active = active,
+            upcoming = upcoming,
+            isLoading = false,
+            errorMessage = null
+        )
+    }
+
+    private fun partitionFreebies(freebies: List<Freebie>): Pair<List<Freebie>, List<Freebie>> {
+        val now = System.currentTimeMillis()
+        val active = freebies.filter { freebie ->
+            val start = freebie.startDateMillis ?: 0L
+            val end = freebie.endDateMillis ?: Long.MAX_VALUE
+            now in start..end
+        }
+        val upcoming = freebies.filter { freebie ->
+            val start = freebie.startDateMillis ?: Long.MAX_VALUE
+            now < start
+        }
+        return active to upcoming
+    }
+
     fun refresh() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             runCatching { repository.getFreebies() }
                 .onSuccess { freebies ->
-                    val now = System.currentTimeMillis()
-
-                    val active = freebies.filter { freebie ->
-                        val start = freebie.startDateMillis ?: 0L
-                        val end = freebie.endDateMillis ?: 0L
-                        now in start..end
-                    }
-
-                    val upcoming = freebies.filter { freebie ->
-                        val start = freebie.startDateMillis ?: Long.MAX_VALUE
-                        now < start
-                    }
+                    val (active, upcoming) = partitionFreebies(freebies)
 
                     _uiState.value = FreebiesUiState(
                         active = active,
