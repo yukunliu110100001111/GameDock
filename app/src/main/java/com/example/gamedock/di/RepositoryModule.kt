@@ -8,8 +8,8 @@ import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.data.repository.DealsRepositoryImpl
 import com.example.gamedock.data.repository.EpicAuthRepository
 import com.example.gamedock.data.repository.EpicAuthRepositoryImpl
-import com.example.gamedock.data.repository.WatchlistRepository
-import com.example.gamedock.data.repository.WatchlistRepositoryImpl
+import com.example.gamedock.data.watchlist.WatchlistRepository
+import com.example.gamedock.data.watchlist.WatchlistRepositoryImpl
 import com.example.gamedock.data.repository.SettingsRepository
 import com.example.gamedock.data.repository.SettingsRepositoryImpl
 import dagger.Binds

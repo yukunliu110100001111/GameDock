@@ -1,7 +1,6 @@
-package com.example.gamedock.data.repository
+package com.example.gamedock.data.watchlist
 
 import android.content.Context
-import com.example.gamedock.data.local.entity.WatchlistEntity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -10,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+
 @Singleton
 class WatchlistRepositoryImpl @Inject constructor(
     @ApplicationContext context: Context,
@@ -86,5 +86,4 @@ class WatchlistRepositoryImpl @Inject constructor(
     override suspend fun get(gameId: String): WatchlistEntity? {
         return _state.value.firstOrNull { it.gameId == gameId }
     }
-
 }

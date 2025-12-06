@@ -1,6 +1,5 @@
-package com.example.gamedock.data.repository
+package com.example.gamedock.data.watchlist
 
-import com.example.gamedock.data.local.entity.WatchlistEntity
 import kotlinx.coroutines.flow.Flow
 
 interface WatchlistRepository {

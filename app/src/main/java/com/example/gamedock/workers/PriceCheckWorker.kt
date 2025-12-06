@@ -6,7 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.gamedock.data.repository.DealsRepository
 import com.example.gamedock.data.repository.SettingsRepository
-import com.example.gamedock.data.repository.WatchlistRepository
+import com.example.gamedock.data.watchlist.WatchlistRepository
 import com.example.gamedock.notifications.PriceDropNotifier
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject

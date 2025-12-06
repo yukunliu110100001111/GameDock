@@ -1,4 +1,4 @@
-package com.example.gamedock.data.local.entity
+package com.example.gamedock.data.watchlist
 
 data class WatchlistEntity(
     val gameId: String,

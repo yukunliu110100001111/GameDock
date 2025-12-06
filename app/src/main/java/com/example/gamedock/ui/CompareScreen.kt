@@ -67,8 +67,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.example.gamedock.R
-import com.example.gamedock.data.local.entity.WatchlistEntity
-import com.example.gamedock.data.repository.WatchlistRepository
+import com.example.gamedock.data.watchlist.WatchlistEntity
+import com.example.gamedock.data.watchlist.WatchlistRepository
 import com.example.gamedock.data.util.CurrencyUtils
 import com.example.gamedock.data.remote.itad.ItadSearchItem
 import com.google.gson.Gson

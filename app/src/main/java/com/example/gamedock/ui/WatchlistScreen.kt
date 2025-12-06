@@ -18,11 +18,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.gamedock.data.local.entity.WatchlistEntity
+import com.example.gamedock.data.watchlist.WatchlistEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.gamedock.data.repository.WatchlistRepository
+import com.example.gamedock.data.watchlist.WatchlistRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
