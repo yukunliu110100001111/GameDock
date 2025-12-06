@@ -21,15 +21,31 @@ class HomeViewModel @Inject constructor(
     private val epicAuthRepository: EpicAuthRepository
 ) : ViewModel() {
 
-    private val _accounts = MutableStateFlow<List<PlatformAccount>>(emptyList())
-    val accounts: StateFlow<List<PlatformAccount>> = _accounts
+    data class HomeUiState(
+        val accounts: List<PlatformAccount> = emptyList(),
+        val isLoading: Boolean = false,
+        val errorMessage: String? = null
+    )
+
+    private val _uiState = MutableStateFlow(HomeUiState(isLoading = true))
+    val uiState: StateFlow<HomeUiState> = _uiState
     private var hasLoadedOnce = false
 
     fun loadAllAccounts(force: Boolean = false) {
         viewModelScope.launch {
-            if (!force && hasLoadedOnce && _accounts.value.isNotEmpty()) return@launch
-            _accounts.value = accountsRepository.loadAllAccounts()
-            hasLoadedOnce = true
+            if (!force && hasLoadedOnce && _uiState.value.accounts.isNotEmpty()) return@launch
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            runCatching {
+                accountsRepository.loadAllAccounts()
+            }.onSuccess {
+                _uiState.value = HomeUiState(accounts = it, isLoading = false, errorMessage = null)
+                hasLoadedOnce = true
+            }.onFailure { err ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = err.message ?: "Failed to load accounts"
+                )
+            }
         }
     }
 
@@ -39,7 +55,9 @@ class HomeViewModel @Inject constructor(
                 PlatformType.Steam -> accountsRepository.deleteSteamAccount(account.id)
                 PlatformType.Epic -> accountsRepository.deleteEpicAccount(account.id)
             }
-            _accounts.value = accountsRepository.loadAllAccounts()
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            val accounts = accountsRepository.loadAllAccounts()
+            _uiState.value = _uiState.value.copy(accounts = accounts, isLoading = false)
         }
     }
 
@@ -53,7 +71,7 @@ class HomeViewModel @Inject constructor(
             )
         )
         withContext(Dispatchers.Main) {
-            _accounts.value = accountsRepository.loadAllAccounts()
+            _uiState.value = _uiState.value.copy(accounts = accountsRepository.loadAllAccounts())
         }
         return true
     }

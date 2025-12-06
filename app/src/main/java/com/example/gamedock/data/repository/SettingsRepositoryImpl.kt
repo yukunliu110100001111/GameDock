@@ -15,14 +15,25 @@ class SettingsRepositoryImpl @Inject constructor(
 
     private val prefs = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
     private val keyNotifications = "notifications_enabled"
+    private val keyEpicRefresh = "epic_auto_refresh"
 
     private val _notifications = MutableStateFlow(
         prefs.getBoolean(keyNotifications, true)
     )
     override val notificationsEnabled: Flow<Boolean> = _notifications.asStateFlow()
 
+    private val _epicAutoRefresh = MutableStateFlow(
+        prefs.getBoolean(keyEpicRefresh, true)
+    )
+    override val epicAutoRefreshEnabled: Flow<Boolean> = _epicAutoRefresh.asStateFlow()
+
     override suspend fun setNotificationsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(keyNotifications, enabled).apply()
         _notifications.value = enabled
+    }
+
+    override suspend fun setEpicAutoRefresh(enabled: Boolean) {
+        prefs.edit().putBoolean(keyEpicRefresh, enabled).apply()
+        _epicAutoRefresh.value = enabled
     }
 }

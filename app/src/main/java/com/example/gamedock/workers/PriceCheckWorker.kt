@@ -5,6 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.example.gamedock.data.repository.DealsRepository
+import com.example.gamedock.data.repository.SettingsRepository
 import com.example.gamedock.data.repository.WatchlistRepository
 import com.example.gamedock.notifications.PriceDropNotifier
 import dagger.assisted.Assisted
@@ -17,15 +18,22 @@ class PriceCheckWorker @AssistedInject constructor(
     @Assisted private val params: WorkerParameters,
     private val watchlistRepository: WatchlistRepository,
     private val dealsRepository: DealsRepository,
+    private val settingsRepository: SettingsRepository,
     private val notifier: PriceDropNotifier
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
 
+        // Respect global notification toggle
+        val notificationsEnabled = settingsRepository.notificationsEnabled.first()
+        if (!notificationsEnabled) return Result.success()
+        notifier.createNotificationChannel()
+
         // 获取 Watchlist 的所有项
         val items = watchlistRepository.watchlistFlow().first()
 
         items.forEach { item ->
+            if (!item.notificationsEnabled) return@forEach
             try {
                 val offers = dealsRepository.comparePrices(item.title)
 

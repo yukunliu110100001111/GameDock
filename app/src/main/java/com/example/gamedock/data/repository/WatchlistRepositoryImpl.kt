@@ -23,7 +23,12 @@ class WatchlistRepositoryImpl @Inject constructor(
     private val _state = MutableStateFlow(loadFromPrefs())
     private fun loadFromPrefs(): List<WatchlistEntity> {
         val json = prefs.getString(key, null) ?: return emptyList()
-        return runCatching { gson.fromJson<List<WatchlistEntity>>(json, type) }.getOrElse { emptyList() }
+        val hasFlag = json.contains("notificationsEnabled")
+        return runCatching { gson.fromJson<List<WatchlistEntity>>(json, type) }
+            .getOrElse { emptyList() }
+            .map { item ->
+                if (hasFlag) item else item.copy(notificationsEnabled = true)
+            }
     }
 
     private fun persist(list: List<WatchlistEntity>) {
@@ -39,7 +44,10 @@ class WatchlistRepositoryImpl @Inject constructor(
         if (index >= 0) {
             // 保留原 addedTime
             val old = current[index]
-            current[index] = item.copy(addedTime = old.addedTime)
+            current[index] = item.copy(
+                addedTime = old.addedTime,
+                notificationsEnabled = old.notificationsEnabled
+            )
         } else {
             current.add(item.copy(addedTime = System.currentTimeMillis()))
         }
@@ -61,6 +69,16 @@ class WatchlistRepositoryImpl @Inject constructor(
         val index = current.indexOfFirst { it.gameId == gameId }
         if (index >= 0) {
             current[index] = current[index].copy(lastKnownPrice = price)
+            _state.value = current
+            persist(current)
+        }
+    }
+
+    override suspend fun setNotificationsEnabled(gameId: String, enabled: Boolean) {
+        val current = _state.value.toMutableList()
+        val index = current.indexOfFirst { it.gameId == gameId }
+        if (index >= 0) {
+            current[index] = current[index].copy(notificationsEnabled = enabled)
             _state.value = current
             persist(current)
         }

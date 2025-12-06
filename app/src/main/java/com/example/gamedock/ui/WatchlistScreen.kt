@@ -62,6 +62,9 @@ fun WatchlistScreen(
                 WatchlistCard(
                     item = item,
                     onDelete = { viewModel.delete(it) },
+                    onToggleNotifications = { enabled ->
+                        viewModel.setNotifications(item.gameId, enabled)
+                    },
                     onOpenCompare = onOpenCompare
                 )
             }
@@ -76,6 +79,7 @@ fun WatchlistScreen(
 private fun WatchlistCard(
     item: WatchlistEntity,
     onDelete: (String) -> Unit,
+    onToggleNotifications: (Boolean) -> Unit,
     onOpenCompare: (String) -> Unit
 ) {
     Card(
@@ -137,9 +141,17 @@ private fun WatchlistCard(
                 }
             }
 
-            // 删除按钮
-            IconButton(onClick = { onDelete(item.gameId) }) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Switch(
+                    checked = item.notificationsEnabled,
+                    onCheckedChange = onToggleNotifications
+                )
+                IconButton(onClick = { onDelete(item.gameId) }) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
             }
         }
     }
@@ -183,6 +195,12 @@ class WatchlistViewModel @Inject constructor(
     fun delete(gameId: String) {
         viewModelScope.launch {
             repo.remove(gameId)
+        }
+    }
+
+    fun setNotifications(gameId: String, enabled: Boolean) {
+        viewModelScope.launch {
+            repo.setNotificationsEnabled(gameId, enabled)
         }
     }
 }

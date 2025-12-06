@@ -1,10 +1,13 @@
 package com.example.gamedock.ui.components
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,7 +21,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,11 +73,20 @@ fun AccountCard(
                 val avatarUrl = account.avatar.takeIf { it.isNotBlank() }
                     ?: buildFallbackAvatar(name)
                 val context = LocalContext.current
+                var avatarFailed by remember { mutableStateOf(false) }
+                var retryKey by remember { mutableStateOf(0) }
 
-                val avatarRequest = remember(avatarUrl) {
+                val avatarRequest = remember(avatarUrl, retryKey) {
                     ImageRequest.Builder(context)
                         .data(avatarUrl)
+                        .setParameter("retryKey", retryKey)
                         .listener(onError = { _, result ->
+                            avatarFailed = true
+                            Toast.makeText(
+                                context,
+                                "Avatar load failed, tap to retry",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             Log.e(
                                 "AvatarLoad",
                                 "Failed to load avatar for ${account.id} from $avatarUrl",
@@ -81,16 +96,32 @@ fun AccountCard(
                         .build()
                 }
 
-                // Avatar
-                AsyncImage(
-                    model = avatarRequest,
-                    contentDescription = null,
-                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-                    error = painterResource(id = R.drawable.ic_launcher_foreground),
+                // Avatar with simple retry tap when failed
+                Box(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                )
+                    .clickable(enabled = avatarFailed) {
+                        avatarFailed = false
+                        retryKey++
+                    },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = avatarRequest,
+                        contentDescription = null,
+                        placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+                        error = painterResource(id = R.drawable.ic_launcher_foreground),
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    if (avatarFailed) {
+                        Text(
+                            text = "Retry",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Black
+                        )
+                    }
+                }
 
                 Spacer(Modifier.width(16.dp))
 

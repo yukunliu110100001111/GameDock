@@ -8,5 +8,6 @@ data class WatchlistEntity(
     val lastKnownPrice: Double = Double.MAX_VALUE,
     val currency: String = "USD",
     val preferredStores: List<String> = emptyList(),
-    val addedTime: Long = System.currentTimeMillis()
+    val addedTime: Long = System.currentTimeMillis(),
+    val notificationsEnabled: Boolean = true
 )

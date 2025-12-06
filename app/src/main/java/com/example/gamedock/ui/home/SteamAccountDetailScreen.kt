@@ -8,6 +8,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.platform.LocalContext
@@ -32,14 +34,14 @@ fun SteamAccountDetailScreen(
     val vm: HomeViewModel = hiltViewModel(parentEntry)
 
     LaunchedEffect(Unit) {
-        if (vm.accounts.value.isEmpty()) {
+        if (vm.uiState.value.accounts.isEmpty()) {
             vm.loadAllAccounts()
         }
     }
 
     // Lookup the selected account in the shared ViewModel
-    val accounts by vm.accounts.collectAsState()
-    val account = accounts
+    val accounts by vm.uiState.collectAsState()
+    val account = accounts.accounts
         .filterIsInstance<SteamAccount>()
         .find { it.id == steamId }
 
@@ -64,7 +66,8 @@ fun SteamAccountDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 

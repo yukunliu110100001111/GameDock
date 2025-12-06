@@ -12,4 +12,5 @@ interface WatchlistRepository {
     suspend fun get(gameId: String): WatchlistEntity?
 
     suspend fun updateLastKnownPrice(gameId: String, newPrice: Double)
+    suspend fun setNotificationsEnabled(gameId: String, enabled: Boolean)
 }
