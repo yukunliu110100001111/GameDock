@@ -42,7 +42,6 @@ class WatchlistRepositoryImpl @Inject constructor(
         val current = _state.value.toMutableList()
         val index = current.indexOfFirst { it.gameId == item.gameId }
         if (index >= 0) {
-            // 保留原 addedTime
             val old = current[index]
             current[index] = item.copy(
                 addedTime = old.addedTime,

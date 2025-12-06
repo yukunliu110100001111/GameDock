@@ -29,7 +29,7 @@ class PriceCheckWorker @AssistedInject constructor(
         if (!notificationsEnabled) return Result.success()
         notifier.createNotificationChannel()
 
-        // 获取 Watchlist 的所有项
+        // Load all watchlist entries once
         val items = watchlistRepository.watchlistFlow().first()
 
         items.forEach { item ->

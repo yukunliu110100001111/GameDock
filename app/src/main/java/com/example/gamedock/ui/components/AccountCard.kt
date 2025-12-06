@@ -59,11 +59,9 @@ fun AccountCard(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically // 保证整体垂直居中
+            verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // --- 左侧内容区域 (头像 + 文字) ---
-            // 使用 weight(1f) 占据剩余空间，防止挤压右侧按钮
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
@@ -130,8 +128,8 @@ fun AccountCard(
                     Text(
                         text = name,
                         style = MaterialTheme.typography.titleMedium,
-                        maxLines = 1, // 限制行数
-                        overflow = TextOverflow.Ellipsis // 超出显示省略号
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     // Platform label
@@ -141,14 +139,12 @@ fun AccountCard(
                             PlatformType.Epic -> "Epic · ID: ${account.id}"
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1, // 限制行数，防止 Epic ID 撑开
-                        overflow = TextOverflow.Ellipsis // 超出显示省略号
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            // --- 右侧内容区域 (删除按钮) ---
-            // 因为左侧加了 weight，这里不需要额外处理，它会保持固定大小
             IconButton(onClick = { onDelete(account) }) {
                 Icon(
                     imageVector = Icons.Default.Delete,
@@ -160,7 +156,6 @@ fun AccountCard(
     }
 }
 
-// 辅助函数保持不变
 private fun stripCdata(text: String?): String {
     if (text.isNullOrBlank()) return ""
     return text.replace("<!\\[CDATA\\[".toRegex(), "")

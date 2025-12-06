@@ -121,7 +121,6 @@ private fun WatchlistCard(
                 }
             }
 
-            // 文本区域
             Column(modifier = Modifier.weight(1f)) {
 
                 Text(
@@ -133,7 +132,6 @@ private fun WatchlistCard(
 
                 Spacer(Modifier.height(6.dp))
 
-                // 监控的平台标签
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     item.preferredStores.forEach { store ->
                         PreferredStoreChip(store)
@@ -158,7 +156,7 @@ private fun WatchlistCard(
 }
 
 // ----------------------------------------------------
-//       Preferred Store Chip (复用颜色体系)
+//       Preferred Store Chip
 // ----------------------------------------------------
 @Composable
 private fun PreferredStoreChip(store: String) {

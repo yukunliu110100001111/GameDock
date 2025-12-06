@@ -73,7 +73,7 @@ import com.example.gamedock.data.util.CurrencyUtils
 import com.example.gamedock.data.remote.itad.ItadSearchItem
 import com.google.gson.Gson
 
-// 注意：这里保留 Dimens 的引用，如果你的项目里没有 Dimens object，请替换为具体数值如 16.dp
+// Keep Dimens reference here; replace with concrete values (e.g. 16.dp) if Dimens is absent
 // import com.example.gamedock.ui.theme.Dimens
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -119,7 +119,7 @@ fun CompareScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp) // 使用 16.dp 代替 Dimens.screenPadding 防止报错
+            .padding(16.dp) // Use 16.dp instead of Dimens.screenPadding to avoid missing symbol
     ) {
         OutlinedTextField(
             value = savedQuery,
@@ -294,8 +294,6 @@ fun CompareScreen(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                    // 【修改点】：移除了 horizontal = 2.dp 的 padding
-                    // 这样卡片宽度会完全对齐上方的 "Best Offer" 摘要
                 ) {
                     PriceCard(
                         offer = offer,
@@ -333,7 +331,6 @@ private fun BestOfferSummary(results: List<Offer>) {
                 fontWeight = FontWeight.Bold
             )
             if (results.size > 1 && diff > 0) {
-                // 【修复】：修复了之前的乱码
                 Text(
                     text = "Vs Highest: save ${CurrencyUtils.format(diff, min.currencyCode)} (~${"%.0f".format(diffPercent)}%)",
                     style = MaterialTheme.typography.bodySmall,

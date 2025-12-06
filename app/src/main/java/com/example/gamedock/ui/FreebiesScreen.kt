@@ -78,10 +78,10 @@ fun FreebiesScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current   // ★ 新增
+    val context = LocalContext.current
     var accountPicker by remember { mutableStateOf<AccountPickerData?>(null) }
 
-    // 监听 Claim 事件
+    // Listen for claim events
     LaunchedEffect(Unit) {
         viewModel.claimEvent.collect { event ->
             when (event) {
@@ -155,7 +155,7 @@ fun FreebiesScreen(
                 items(uiState.active) { freebie ->
                     FreebieCard(
                         freebie = freebie,
-                        onClick = { viewModel.onClaimClicked(freebie) } // ★ 修改
+                        onClick = { viewModel.onClaimClicked(freebie) }
                     )
                 }
 
@@ -164,7 +164,7 @@ fun FreebiesScreen(
                 items(uiState.upcoming) { freebie ->
                     FreebieCard(
                         freebie = freebie,
-                        onClick = { viewModel.onClaimClicked(freebie) } // ★ 修改
+                        onClick = { viewModel.onClaimClicked(freebie) }
                     )
                 }
             }
@@ -206,7 +206,7 @@ fun FreebiesScreen(
 @Composable
 fun FreebieCard(
     freebie: Freebie,
-    onClick: () -> Unit = {}   // 这个 onClick 用于 Claim
+    onClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -214,7 +214,7 @@ fun FreebieCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 16.dp)
-            .clickable { /* 原始点击行为 */ },
+            .clickable { /* default card tap is disabled; actions handled via buttons */ },
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -321,7 +321,6 @@ class FreebiesViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(FreebiesUiState(isLoading = true))
     val uiState: StateFlow<FreebiesUiState> = _uiState.asStateFlow()
 
-    // ★ 新增：Claim 事件
     private val _claimEvent = MutableSharedFlow<ClaimUiEvent>()
     val claimEvent = _claimEvent.asSharedFlow()
 
@@ -336,14 +335,12 @@ class FreebiesViewModel @Inject constructor(
             val platform = freebie.platformType()
 
             if (platform == null) {
-                // ★ 非 Epic / Steam → 外部浏览器
                 freebie.claimUrl?.let {
                     _claimEvent.emit(ClaimUiEvent.ExternalBrowser(it))
                 }
                 return@launch
             }
 
-            // ★ 支持的平台 → 使用账号系统
             val accounts = accountsRepository
                 .loadAllAccounts()
                 .filter { it.platform == platform }
@@ -450,7 +447,8 @@ private fun AccountSelectDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("选择 ${data.platform.name} 账号") },
+        title = { Text("Choose ${data.platform.name} account") },
+        // Account selection dialog title
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 data.accounts.forEach { account ->
@@ -485,7 +483,7 @@ private fun AccountSelectDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
 }

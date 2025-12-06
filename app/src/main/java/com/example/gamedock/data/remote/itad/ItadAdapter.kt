@@ -17,7 +17,7 @@ import java.time.format.DateTimeParseException
 @Singleton
 class ItadAdapter @Inject constructor(
     private val itadApiService: ItadApiService,
-    @ApplicationContext private val context: Context // 注入应用 Context 以读取当前语言/区域
+    @ApplicationContext private val context: Context // Inject app context to read locale/region
 ) {
 
     private val ITAD_API_KEY = "d719761d720142c5f15a7b7b7177704783ffc227"

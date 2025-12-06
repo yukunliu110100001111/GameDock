@@ -38,7 +38,6 @@ fun WatchlistCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // 封面图 —— 复用 PriceCard 的视觉风格
             Box(
                 modifier = Modifier
                     .size(72.dp)
@@ -63,7 +62,6 @@ fun WatchlistCard(
                 }
             }
 
-            // 游戏信息
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.title,
@@ -71,7 +69,6 @@ fun WatchlistCard(
                     maxLines = 1
                 )
 
-                // preferredStores → 使用复用 StoreChip
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.padding(top = 6.dp)
@@ -82,7 +79,6 @@ fun WatchlistCard(
                 }
             }
 
-            // 删除按钮（不影响点击整卡跳 Compare）
             IconButton(onClick = { onDelete(item.gameId) }) {
                 Icon(
                     imageVector = Icons.Default.Delete,

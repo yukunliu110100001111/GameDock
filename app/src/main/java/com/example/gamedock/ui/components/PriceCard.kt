@@ -60,8 +60,7 @@ fun PriceCard(
     val uriHandler = LocalUriHandler.current
     val context = LocalContext.current
     val isLowest = offer.currentPrice <= offer.lowestPrice && offer.lowestPrice > 0
-    
-    // 爱心颜色动画
+
     val heartColor by animateColorAsState(
         targetValue = if (isWatchlisted) Color(0xFFFF4D4D) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f),
         animationSpec = tween(300),
@@ -71,16 +70,15 @@ fun PriceCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(105.dp), // 【关键修改】固定高度，强制变扁
+            .height(105.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(modifier = Modifier.fillMaxSize()) {
-            // --- 1. 左侧图片区 (变宽了) ---
             Box(
                 modifier = Modifier
-                    .width(120.dp) // 【关键修改】宽度增加，能看到更多画面
+                    .width(120.dp)
                     .fillMaxHeight()
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
@@ -103,23 +101,19 @@ fun PriceCard(
                 }
             }
 
-            // --- 2. 右侧内容容器 ---
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .padding(10.dp) // 内部边距
+                    .padding(10.dp)
             ) {
-                // 中间：文本信息
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        // 商店标签
                         StoreChip(store = offer.store)
                         Spacer(modifier = Modifier.height(4.dp))
-                        // 标题
                         Text(
                             text = offer.gameTitle,
                             style = MaterialTheme.typography.titleMedium,
@@ -130,7 +124,6 @@ fun PriceCard(
                         )
                     }
                     
-                    // 底部小字
                     if (isLowest) {
                         Text(
                             text = "History Low",
@@ -147,13 +140,11 @@ fun PriceCard(
                     }
                 }
 
-                // 右边：价格与操作按钮
                 Column(
                     modifier = Modifier.fillMaxHeight(),
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // 价格
                     Text(
                         text = CurrencyUtils.format(offer.currentPrice, offer.currencyCode),
                         style = MaterialTheme.typography.titleLarge,
@@ -161,12 +152,10 @@ fun PriceCard(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // 底部操作区：爱心 + 跳转 (并排防拥挤)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        // 爱心按钮
                         IconButton(
                             onClick = { onToggleWatchlist(offer) },
                             modifier = Modifier.size(32.dp)
@@ -179,7 +168,6 @@ fun PriceCard(
                             )
                         }
 
-                        // 跳转按钮 (做成小圆角矩形)
                         Surface(
                             onClick = {
                                 onOpenStore(offer)
@@ -204,7 +192,7 @@ fun PriceCard(
     }
 }
 
-// 辅助组件：商店标签 (微调得更小一点)
+// Store tag badge
 @Composable
 private fun StoreChip(store: String) {
     val bg = storeColor(store)
@@ -222,7 +210,7 @@ private fun StoreChip(store: String) {
     }
 }
 
-// 颜色逻辑 (保持不变)
+// Store color palette
 @Composable
 private fun storeColor(store: String): Color {
     return when {

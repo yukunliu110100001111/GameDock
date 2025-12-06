@@ -20,8 +20,6 @@ class EpicStoreAdapter @Inject constructor(
 
         for (item in elements) {
 
-            // ---- 修复：只选折扣 = 0 的优惠作为免费活动 ----
-
             val activeFreeOffer = item.promotions
                 ?.promotionalOffers
                 ?.flatMap { it.promotionalOffers ?: emptyList() }
@@ -32,11 +30,9 @@ class EpicStoreAdapter @Inject constructor(
                 ?.flatMap { it.promotionalOffers ?: emptyList() }
                 ?.firstOrNull { it.discountSetting?.discountPercentage == 0 }
 
-            // 只使用真正的免费活动（不能用正在打折的活动时间）
             val freeOffer = activeFreeOffer ?: upcomingFreeOffer ?: continue
 
 
-            //  筛选真正的免费游戏（过滤掉打折促销）,之后可能扩展
             val price = item.price?.totalPrice
 
             val isActiveFree = price != null &&
@@ -56,9 +52,6 @@ class EpicStoreAdapter @Inject constructor(
             if (!isFree) continue
 
 
-            // ---------------------------
-            // slug
-            // ---------------------------
             val slug = item.productSlug
                 ?: item.catalogNs?.mappings?.firstOrNull()?.pageSlug
                 ?: item.urlSlug
@@ -66,18 +59,12 @@ class EpicStoreAdapter @Inject constructor(
 
             val claimUrl = "https://store.epicgames.com/p/$slug"
 
-            // ---------------------------
-            // image
-            // ---------------------------
             val imageUrl = item.keyImages
                 ?.firstOrNull { it.type == "DieselStoreFrontWide" }
                 ?.url
                 ?: item.keyImages?.firstOrNull()?.url
 
 
-            // ---------------------------
-            // 修复：使用免费活动的 startDate / endDate
-            // ---------------------------
             val startDate = freeOffer.startDate
             val endDate = freeOffer.endDate
 
