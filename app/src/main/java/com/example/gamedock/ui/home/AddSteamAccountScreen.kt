@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.gamedock.ui.Screen
 
 @Composable
 fun AddSteamAccountScreen(
@@ -35,6 +36,7 @@ fun AddSteamAccountScreen(
 ) {
 
     val context = LocalContext.current
+    val homeEntry = remember(navController) { navController.getBackStackEntry(Screen.Home.route) }
 
     var secure by remember { mutableStateOf("") }
     var sessionId by remember { mutableStateOf("") }
@@ -43,11 +45,12 @@ fun AddSteamAccountScreen(
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set("account_added", true)
+            homeEntry.savedStateHandle["account_added"] = true
             viewModel.resetSavedFlag()
-            navController.popBackStack()
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Home.route) { inclusive = false }
+                launchSingleTop = true
+            }
         }
     }
 

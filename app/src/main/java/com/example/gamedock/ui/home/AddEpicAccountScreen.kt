@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.platform.LocalContext
+import com.example.gamedock.ui.Screen
 
 @Composable
 fun AddEpicAccountScreen(
@@ -24,15 +25,17 @@ fun AddEpicAccountScreen(
 ) {
 
     val context = LocalContext.current
+    val homeEntry = remember(navController) { navController.getBackStackEntry(Screen.Home.route) }
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.isCompleted) {
         if (uiState.isCompleted) {
-            navController.previousBackStackEntry
-                ?.savedStateHandle
-                ?.set("account_added", true)
+            homeEntry.savedStateHandle["account_added"] = true
             viewModel.resetCompletionFlag()
-            navController.popBackStack()
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Home.route) { inclusive = false }
+                launchSingleTop = true
+            }
         }
     }
 
