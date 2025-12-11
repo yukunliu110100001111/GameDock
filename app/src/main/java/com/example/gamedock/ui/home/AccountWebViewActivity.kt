@@ -60,7 +60,7 @@ abstract class AccountWebViewActivity : ComponentActivity() {
             background = null
             val size = (48 * resources.displayMetrics.density).toInt()
             val margin = (12 * resources.displayMetrics.density).toInt()
-            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.START or Gravity.TOP).apply {
+            layoutParams = FrameLayout.LayoutParams(size, size, Gravity.START or Gravity.BOTTOM).apply {
                 setMargins(margin, margin, margin, margin)
             }
             setOnClickListener { onBackPressedDispatcher.onBackPressed() }

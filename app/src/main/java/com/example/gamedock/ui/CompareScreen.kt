@@ -185,7 +185,7 @@ private fun CompareScreenContent(
             val countText = if (!uiState.isLoading && uiState.results.isNotEmpty())
                 " (" + uiState.results.size + ")" else ""
             Text(
-                text = " Price Comparison$countText",
+                text = "Price Comparison$countText",
                 style = MaterialTheme.typography.headlineSmall,
             )
             Row {
