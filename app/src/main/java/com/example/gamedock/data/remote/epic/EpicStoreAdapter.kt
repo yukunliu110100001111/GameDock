@@ -34,23 +34,7 @@ class EpicStoreAdapter @Inject constructor(
             val freeOffer = activeFreeOffer ?: upcomingFreeOffer ?: continue
 
 
-            val price = item.price?.totalPrice
 
-            val isActiveFree = price != null &&
-                    price.discountPrice == 0 &&
-                    (price.originalPrice ?: 0) > 0
-
-            val isUpcomingFree = item.promotions
-                ?.upcomingPromotionalOffers
-                ?.any { wrapper ->
-                    wrapper.promotionalOffers?.any { promo ->
-                        promo.discountSetting?.discountPercentage == 0
-                    } == true
-                } == true
-
-            val isFree = isActiveFree || isUpcomingFree
-
-            if (!isFree) continue
 
 
             val slug = item.productSlug
