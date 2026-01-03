@@ -1,0 +1,83 @@
+**Add-on after Beta**
+
+
+
+**Login:**
+
+Epic support references a third-party open-source Epic platform called _Heroic_ for Epic login. However, since it does not support the Android platform, we referenced its ideas but did not use any of its actual code for implementation.
+
+Steam support references _ArchiSteamFarm_. For the same reason, since it does not support Android and its components are not easy to separate, I referenced its ideas and built the Steam login and credential-saving system.
+
+
+
+**Discount / Free Information Retrieval:**
+
+We use three APIs: GamerPower and IsThereAnyDeal to obtain discount and free-game information for most platforms. The Epic official API is used to obtain current and upcoming free-game information.
+
+
+
+GamerPower provides interfaces to obtain currently available free games.
+
+ITAD provides discount game and bundle information. Our application periodically retrieves update information through network requests and caches it locally to provide offline support.
+
+Epic officially provides current and upcoming free-game information.
+
+
+
+**Features:**
+
+We are currently the first application on the Android platform that integrates free-game information retrieval and supports account saving, directly claiming free games. Based on this core function, we have also added features such as following games, cross-platform price comparison, historical lowest-price queries, charity bundle queries, and price-drop notifications. Deploying the application on mobile devices significantly increases usability and convenience, allowing users to complete all core game-purchase operations in one place within our application.
+
+
+
+**Division of Work:**
+
+
+
+**Liu Yukun:** Multi-account login saving functionality
+
+**EPIC:** Epic officially has security authentication, but Heroic provides an approach to bypass the checks: using a client authentication code to obtain login credentials, and then completing all permission-required operations by attaching the credentials. Therefore, I first created a class to handle all requests, then used this class to handle all Epic-related requests and saved the relevant credentials to achieve persistent login.
+
+**Steam:** Steam can achieve login by saving its cookies after web login. I created several activities to manage WebView, first capturing cookies after login and saving them locally. Afterwards, when opening the Steam interface, cookies are injected to achieve login.
+
+**Home Interface:** A home page was built to support account login and saving.
+
+
+
+**Li Siyu:** Free-game claiming + watchlist
+
+**Freebies (Free-game claiming):** Discount and free-game information from Epic API and GamerPower API is obtained, and the returned JSON data is parsed and encapsulated, then uniformly converted into the internal data model used by the application. Based on promotion start and end dates, game status is determined and classified into _Upcoming_ and _Active_. When the user clicks the _Claim_ button, the application jumps to the official platform webpage through an Intent to complete the claiming process.
+
+**Architecture:** During implementation, a _Service + Adapter_ structure design was adopted, where Service is responsible for network requests and API data acquisition, and Adapter is responsible for binding parsed data to list views for display. This design improves module decoupling and facilitates later feature expansion and maintenance.
+
+**Watchlist + Price Tracking:** The Watchlist feature is highly related to the Compare interface. When a user adds a game to the Watchlist, the system records its current price and compares it with the previous price during subsequent data updates. If a price drop is detected, a notification mechanism is triggered to remind the user, thus achieving continuous price tracking for followed games.
+
+
+
+**Sheng Tianqi:** Game search + price comparison
+
+**ITAD:** Applied for an ITAD API key and used Retrofit to call related APIs, wrapping the returned results into Kotlin case classes. To be compatible with the Repository interface, an Adapter was written to wrap the directly returned data into the format required by the program, and to provide various utility methods for external use.
+
+**Refactor:** After the prototype was completed, the project was refactored in order to introduce Heroic-related dependencies and frameworks, and related configurations were modified.
+
+**Optimization:** Assisted with testing code and performed some optimizations when the project was largely completed, mainly focusing on optimizing user experience, including but not limited to displaying a load-failure image as a prompt when loading fails, quickly clearing the search bar, and sorting by price.
+
+
+
+**Workflow and Challenges:**
+
+We first used software engineering methods to standardize the development process and division of work, determining responsibilities and API documentation in advance. Then, after each of us completed our respective parts, we entered the integration process.
+
+**Challenges:** When reproducing ideas from open-source projects, we encountered unclear documentation, in which case we could only refer to the code and perform trial-and-error modifications. When using third-party services, there were cases where what we wanted was not provided (such as complete charity bundle integration), so we had to re-implement the functionality ourselves. During integration after completing individual modules, issues caused by unclear prior communication arose, requiring gradual coordination to finally complete the project. Some game platform APIs were very disorganized and needed to be identified and unified. Platforms that did not provide free APIs could only use third-party APIs for assistance.
+
+
+
+**Auxiliary Tools:**
+
+ChatGPT / Gemini / Git / GitHub
+
+
+
+**Learning Outcomes:**
+
+We applied what we learned in class and combined it with software engineering practice for group collaboration, learned how to make network calls and use third-party services, and ultimately successfully built a practical piece of software that can be used in our daily lives.
