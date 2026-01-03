@@ -1,7 +1,7 @@
 **Add-on after Beta**
 
 
-
+# Use of OpenSource application
 **Login:**
 
 Epic support references a third-party open-source Epic platform called _Heroic_ for Epic login. However, since it does not support the Android platform, we referenced its ideas but did not use any of its actual code for implementation.
@@ -9,7 +9,7 @@ Epic support references a third-party open-source Epic platform called _Heroic_ 
 Steam support references _ArchiSteamFarm_. For the same reason, since it does not support Android and its components are not easy to separate, I referenced its ideas and built the Steam login and credential-saving system.
 
 
-
+# Use of Third party API
 **Discount / Free Information Retrieval:**
 
 We use three APIs: GamerPower and IsThereAnyDeal to obtain discount and free-game information for most platforms. The Epic official API is used to obtain current and upcoming free-game information.
@@ -23,13 +23,13 @@ ITAD provides discount game and bundle information. Our application periodically
 Epic officially provides current and upcoming free-game information.
 
 
-
+# Improve of our application
 **Features:**
 
 We are currently the first application on the Android platform that integrates free-game information retrieval and supports account saving, directly claiming free games. Based on this core function, we have also added features such as following games, cross-platform price comparison, historical lowest-price queries, charity bundle queries, and price-drop notifications. Deploying the application on mobile devices significantly increases usability and convenience, allowing users to complete all core game-purchase operations in one place within our application.
 
 
-
+# Report of Implementation and Work devision
 **Division of Work:**
 
 
@@ -63,7 +63,7 @@ We are currently the first application on the Android platform that integrates f
 **Optimization:** Assisted with testing code and performed some optimizations when the project was largely completed, mainly focusing on optimizing user experience, including but not limited to displaying a load-failure image as a prompt when loading fails, quickly clearing the search bar, and sorting by price.
 
 
-
+# Workflow Challenges Tools Learning
 **Workflow and Challenges:**
 
 We first used software engineering methods to standardize the development process and division of work, determining responsibilities and API documentation in advance. Then, after each of us completed our respective parts, we entered the integration process.
